@@ -1,0 +1,197 @@
+package localization;
+import java.util.ArrayList;
+import util.Util;
+import data.DataCenter;
+import drivers.HWConstants;
+import drivers.Navigation;
+import drivers.USPoller;
+
+/**
+ * Class to localize the robot using the wall and ultrasonic sensor data.
+ * 
+ * @author Andrei Purcarus
+ *
+ */
+public class USLocalizer {
+	/**
+	 * Wrapper class for triples of angle, distance and filteredDistance.
+	 * 
+	 * @author Andrei Purcarus
+	 *
+	 */
+	private static class Triple {
+		/**
+		 * Default constructor.
+		 * @param angle The angle in degrees.
+		 * @param distance The distance in cm.
+		 * @param filteredDistance The filtered distance in cm.
+		 */
+		Triple(double angle, int distance, int filteredDistance) {
+			this.angle = angle;
+			this.distance = distance;
+			this.filteredDistance = filteredDistance;
+		}
+		double angle;
+		int distance;
+		int filteredDistance;
+	}
+	
+	/**
+	 * The speed to use during turning for the right motor. The 
+	 * speed of the left motor is scaled appropriately.
+	 */
+	private static final int TURN_SPD = 120;
+	
+	/**
+	 * The location from which to get data from the ultrasonic sensor.
+	 */
+	private DataCenter dc;
+	/**
+	 * The robot's navigation system.
+	 */
+	private Navigation nav;
+
+	/**
+	 * Default constructor.
+	 * @param dc The location to get data from.
+	 * @param nav The navigation to use to turn the robot.
+	 */
+	public USLocalizer(DataCenter dc, Navigation nav) {
+		this.dc = dc;
+		this.nav = nav;
+	}
+
+	/**
+	 * Performs localization using the walls.
+	 */
+	public void doLocalization() {
+		minimaLocalization();
+	}
+	
+	/**
+	 * Performs localization. Makes the robot turn 360 degrees while
+	 * logging angle and distance pairs from the odometer and ultrasonic
+	 * sensor respectively. Then computes the minimum distance and takes
+	 * the corresponding angle T to be either 180 degrees or 270 degrees. 
+	 * Then checks which of T+90 or T-90 has a smaller distance associated
+	 * with it, and uses that angle as the other of 180 degrees or 270
+	 * degrees. Then determines which is which and updates the position
+	 * of the robot accordingly.
+	 */
+	private void minimaLocalization() {
+		
+		ArrayList<Triple> pos = new ArrayList<Triple>();
+
+		//Rotate the robot 360 degrees in a new thread and log values.
+		Thread t = new Thread() {
+			public void run() {
+				nav.turn(360, TURN_SPD);
+			}
+		};
+		t.start();
+		
+		while (t.isAlive()) {
+			double angle = dc.getTheta();
+			int dist = dc.getDistance(90);
+			int filteredDist = dc.getFilteredDistance(90);
+			pos.add(new Triple(angle, dist, filteredDist));
+			try {
+				Thread.sleep(USPoller.PING_DELAY);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		//Finds the triple with the minimum distance in the array.
+		Triple min = new Triple(0.0, 255, 255);
+		for (Triple p : pos) {
+			if (p.distance < min.distance) {
+				min = p;
+			}
+		}
+		
+		//Finds all triples with the same distance as the minimum.
+		ArrayList<Triple> minimums = new ArrayList<Triple>();
+		for (Triple p : pos) {
+			if (p.distance == min.distance) {
+				minimums.add(p);
+			}
+		}
+		
+		//Finds the median minimum. We know min will have the same distance
+		//as the other minima, so we only need to change the angle.
+		if (minimums.size() % 2 == 0) {
+			Triple aboveMedian = minimums.get(minimums.size()/2);
+			Triple belowMedian = minimums.get(minimums.size()/2 - 1);
+			min.angle = (aboveMedian.angle + belowMedian.angle) / 2;
+		} else {
+			min.angle = (minimums.get(minimums.size() / 2)).angle;
+		}
+		
+		//Find the triples at +- 90 degrees from the minimum.
+		double minusAngle = Util.toRange(min.angle - 90.0, 0.0, false);
+		Triple minus = find(pos, minusAngle);
+		double plusAngle = Util.toRange(min.angle + 90.0, 0.0, false);
+		Triple plus = find(pos, plusAngle);
+		
+		//plus and minus have been found. Chooses the one with the lower
+		//filtered distance for the other minimum value.
+		boolean plusMin = plus.filteredDistance < minus.filteredDistance;
+		
+		//Assigns the perpendicular triple that is closest to the wall to otherMin.
+		Triple otherMin = plusMin ? plus : minus;
+
+		//Finds out which is x and which is y.
+		//xy = true means x -> min and y -> otherMin.
+		boolean xy = (Util.toRange(min.angle - otherMin.angle, -180.0, true) < 0);
+		//Sets x, y and theta using the values from min and otherMin.
+		if (xy) {
+			double x = HWConstants.US_DISTANCE + min.filteredDistance - HWConstants.TILE_DISTANCE;
+			double y = HWConstants.US_DISTANCE + otherMin.filteredDistance - HWConstants.TILE_DISTANCE;
+			double angleCorrect = Util.toRange(180.0 - min.angle, 0.0, false);
+			double angle = Util.toRange(dc.getTheta() + angleCorrect, 0.0, false);
+			dc.setXYT(x, y, angle);
+		} else {
+			double x = HWConstants.US_DISTANCE + otherMin.filteredDistance - HWConstants.TILE_DISTANCE;
+			double y = HWConstants.US_DISTANCE + min.filteredDistance - HWConstants.TILE_DISTANCE;
+			double angleCorrect = Util.toRange(270.0 - min.angle, 0.0, false);
+			double angle = Util.toRange(dc.getTheta() + angleCorrect, 0.0, false);
+			dc.setXYT(x, y, angle);
+		}
+	}
+	
+	/**
+	 * Finds the Triple whose angle is closest to the given angle.
+	 * @param arr The container for the triples to search. The container
+	 * 			  must be sorted in increasing angle order, except for wrap-arounds.
+	 * @param angle The angle to find.
+	 * @return The Triple whose angle is closest to the given angle.
+	 */
+	private Triple find(ArrayList<Triple> arr, double angle) {
+		boolean over = (angle > arr.get(0).angle);
+		Triple result = new Triple(0.0, 255, 255);
+		if (over) {
+			for (Triple p : arr) {
+				if (p.angle >= angle) {
+					result.angle = p.angle;
+					result.distance = p.distance;
+					result.filteredDistance = p.filteredDistance;
+					break;
+				}
+			}
+		} else {
+			boolean less = false;
+			for (Triple p : arr) {
+				if (!less && p.angle <= angle) {
+					less = true;
+				} else if (less && p.angle >= angle) {
+					result.angle = p.angle;
+					result.distance = p.distance;
+					result.filteredDistance = p.filteredDistance;
+					break;
+				}
+			}
+		}
+		return result;
+	}
+}
