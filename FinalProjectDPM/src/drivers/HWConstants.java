@@ -119,8 +119,8 @@ public class HWConstants {
 
 		LEFT_MOTOR = Motor.A;
 		RIGHT_MOTOR = Motor.C;
-		LAUNCHER=Motor.B;
-		DIRECTION = -1;
+		LAUNCHER= Motor.B;
+		DIRECTION = 1;
 
 		LEFT_US_PORT = SensorPort.S1;
 		FRONT_US_PORT = SensorPort.S3;

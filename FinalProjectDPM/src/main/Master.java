@@ -21,7 +21,7 @@ import launcher.Launcher;
  * and starts them.
  * 
  * @author Andrei Purcarus
- *
+ * @author Leotard Niyonkuru
  */
 public class Master {
 	/**

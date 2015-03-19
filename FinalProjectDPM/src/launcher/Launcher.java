@@ -10,6 +10,7 @@ import lejos.nxt.Sound;
  * storage state.
  * 
  * @author Andrei Purcarus
+ * @author Leotard Niyonkuru
  *
  */
 public class Launcher {
@@ -81,7 +82,7 @@ public class Launcher {
 	private void activate() {
 		active=true;
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(-585);
+		LAUNCHER.rotate(-560);
 	}
 	
 	/**
@@ -98,7 +99,7 @@ public class Launcher {
 	 */
 	private void arm() {
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(315);
+		LAUNCHER.rotate(290);
 		LAUNCHER.setSpeed(LOW);
 		LAUNCHER.rotate(90);
 	}

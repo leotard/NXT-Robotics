@@ -506,13 +506,13 @@ public class Navigation {
 				HWConstants.LEFT_RADIUS));
 		HWConstants.RIGHT_MOTOR.setSpeed(Math.abs(rSpd));
 		if (lSpd * HWConstants.DIRECTION < 0)
-			HWConstants.LEFT_MOTOR.forward();
-		else
 			HWConstants.LEFT_MOTOR.backward();
-		if (rSpd * HWConstants.DIRECTION < 0)
-			HWConstants.RIGHT_MOTOR.forward();
 		else
+			HWConstants.LEFT_MOTOR.forward();
+		if (rSpd * HWConstants.DIRECTION < 0)
 			HWConstants.RIGHT_MOTOR.backward();
+		else
+			HWConstants.RIGHT_MOTOR.forward();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 	}
 
