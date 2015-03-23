@@ -23,7 +23,7 @@ public class CSLocalizer implements CSListener {
 	/**
 	 * The minimal delay in ms between consecutive pings.
 	 */
-	private static final long DELAY = 500;
+	private static final long DELAY = 200;
 	/**
 	 * The NUM_LINES {x, y, theta} tuples for grid line detection.
 	 */

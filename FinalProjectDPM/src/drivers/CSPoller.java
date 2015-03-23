@@ -12,12 +12,6 @@ import lejos.nxt.Sound;
  */
 public class CSPoller extends Thread {
 	/**
-	 * The difference in color necessary to 
-	 * report a color change detection.
-	 */
-	private static final int COLOR_DIFFERENCE = 3;
-	
-	/**
 	 * The maximum color value detected that can be taken as a grid line.
 	 */
 	private static final int MAX_GRID = 45;
@@ -57,7 +51,6 @@ public class CSPoller extends Thread {
 		while (true) {
 			int csValue = poll();
 			dc.setCSValue(csValue);
-			int previous = getPreviousMean();
 			int current = getCurrentMean();
 			//Checks if the current value is less than the previous one.
 			if (current < MAX_GRID)  {
@@ -88,20 +81,7 @@ public class CSPoller extends Thread {
 		data[NUM_VALUES-1] = val;
 		return val;
 	}
-
-	/**
-	 * Returns the mean value of the first NUM_VALUES/2 readings in data.
-	 * @return The mean value obtained from the first NUM_VALUES/2 data.
-	 */
-	private int getPreviousMean() {
-		int mean = 0;
-		for (int i = 0; i < NUM_VALUES/2; ++i) {
-			mean += data[i];
-		}
-		mean /= (NUM_VALUES/2);
-		return mean;
-	}
-
+	
 	/**
 	 * Computes the mean of the last NUM_VALUES - NUM_VALUES/2 data readings and returns it.
 	 * @return The mean of the last NUM_VALUES - NUM_VALUES/2 data readings.

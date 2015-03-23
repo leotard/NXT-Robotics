@@ -16,15 +16,15 @@ public class Navigation {
 	/**
 	 * The lowest speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int LOW_SPD = 100;
+	private static final int LOW_SPD = 200;
 	/**
 	 * The intermediate speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int MID_SPD = 200;
+	private static final int MID_SPD = 300;
 	/**
 	 * The highest speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int HIGH_SPD = 300;
+	private static final int HIGH_SPD = 400;
 	/**
 	 * The default speed used by the right motor while rotating in place.
 	 * The left motor speed is scaled accordingly.
@@ -33,16 +33,16 @@ public class Navigation {
 	/**
 	 * The acceleration used by the robot's motors in deg/s/s.
 	 */
-	private static final int ACCELERATION = 1000;
+	private static final int ACCELERATION = 500;
 
 	/**
 	 * The maximum error in x or y when traveling to a point, in cm.
 	 */
-	private final double CM_ERR = 1.0;
+	private final double CM_ERR = 2.0;
 	/**
 	 * The maximum error in angle when traveling to a point, in degrees.
 	 */
-	private final double DEG_ERR = 2.0;
+	private final double DEG_ERR = 5.0;
 	/**
 	 * When the robot's heading is within this, in degrees, of the heading 
 	 * towards destination, stops wall following.
@@ -52,7 +52,7 @@ public class Navigation {
 	/**
 	 * The minimum distance in cm from a frontal obstacle to keep the robot at.
 	 */
-	private final int MIN_FRONT_DISTANCE = 20;
+	private final int MIN_FRONT_DISTANCE = 30;
 	/**
 	 * The minimum distance in cm from a side obstacle to keep the robot at.
 	 */
@@ -416,9 +416,9 @@ public class Navigation {
 				TURN_SPD * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
 		HWConstants.RIGHT_MOTOR.setSpeed(TURN_SPD);
 		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
-				HWConstants.LEFT_RADIUS, HWConstants.WIDTH, error), true);
+				HWConstants.LEFT_RADIUS, error), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
-				HWConstants.RIGHT_RADIUS, HWConstants.WIDTH, error), false);
+				HWConstants.RIGHT_RADIUS, error), false);
 		HWConstants.LEFT_MOTOR.stop();
 		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
@@ -444,9 +444,9 @@ public class Navigation {
 				speed * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
 		HWConstants.RIGHT_MOTOR.setSpeed(speed);
 		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
-				HWConstants.LEFT_RADIUS, HWConstants.WIDTH, error), true);
+				HWConstants.LEFT_RADIUS, error), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
-				HWConstants.RIGHT_RADIUS, HWConstants.WIDTH, error), false);
+				HWConstants.RIGHT_RADIUS, error), false);
 		HWConstants.LEFT_MOTOR.stop();
 		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
@@ -463,9 +463,9 @@ public class Navigation {
 				TURN_SPD * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
 		HWConstants.RIGHT_MOTOR.setSpeed(TURN_SPD);
 		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
-				HWConstants.LEFT_RADIUS, HWConstants.WIDTH, angle), true);
+				HWConstants.LEFT_RADIUS, angle), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
-				HWConstants.RIGHT_RADIUS, HWConstants.WIDTH, angle), false);
+				HWConstants.RIGHT_RADIUS, angle), false);
 		HWConstants.LEFT_MOTOR.stop();
 		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
@@ -485,9 +485,9 @@ public class Navigation {
 				speed * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
 		HWConstants.RIGHT_MOTOR.setSpeed(speed);
 		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
-				HWConstants.LEFT_RADIUS, HWConstants.WIDTH, angle), true);
+				HWConstants.LEFT_RADIUS, angle), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
-				HWConstants.RIGHT_RADIUS, HWConstants.WIDTH, angle), false);
+				HWConstants.RIGHT_RADIUS, angle), false);
 		HWConstants.LEFT_MOTOR.stop();
 		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
@@ -520,12 +520,14 @@ public class Navigation {
 	 * Calculates the required angle that a wheel needs to turn
 	 * assuming both wheels are turning.
 	 * @param radius The radius of the wheel in cm.
-	 * @param width The distance between the two wheels in cm.
 	 * @param angle The angle by which the robot should turn in degrees 
 	 * 				counterclockwise.
 	 * @return The angle by which the wheel should turn in degrees.
 	 */
-	private int convertAngle(double radius, double width, double angle) {
-		return (int) (width * angle / (2 * radius));
+	private int convertAngle(double radius, double angle) {
+		if (angle > 0)
+			return (int) (HWConstants.CC_WIDTH * angle / (2 * radius));
+		else
+			return (int) (HWConstants.C_WIDTH * angle / (2 * radius));
 	}
 }

@@ -100,7 +100,7 @@ public class BluetoothComm extends Thread {
 	 */
 	private void send() throws IOException {
 		synchronized (this) {
-			if ((mode & 0b0001) != 0) {
+			if ((mode & 0x1) != 0) {
 				double[] xyt = dc.getXYT();
 				dos.writeByte(X);
 				dos.writeDouble(xyt[0]);
@@ -109,15 +109,15 @@ public class BluetoothComm extends Thread {
 				dos.writeByte(THETA);
 				dos.writeDouble(xyt[2]);
 			}
-			if ((mode & 0b0010) != 0) {
+			if ((mode & 0x2) != 0) {
 				dos.writeByte(LEFT_US_DISTANCE);
 				dos.writeInt(dc.getDistance(180));
 			}
-			if ((mode & 0b0100) != 0) {
+			if ((mode & 0x4) != 0) {
 				dos.writeByte(FRONT_US_DISTANCE);
 				dos.writeInt(dc.getDistance(90));
 			}
-			if ((mode & 0b1000) != 0) {
+			if ((mode & 0x8) != 0) {
 				dos.writeByte(CS_VALUE);
 				dos.writeInt(dc.getCSValue());
 			}

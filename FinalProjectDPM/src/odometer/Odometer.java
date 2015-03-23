@@ -77,8 +77,12 @@ public class Odometer extends Thread {
 			rightTacho = newRightTacho;
 			
 			//Difference in direction angle of the robot in radians.
-			double thetaChange = Math.toDegrees((rightDistance - leftDistance) / 
-					HWConstants.WIDTH);
+			double diff = rightDistance - leftDistance;
+			double thetaChange = 0;
+			if (diff > 0)
+				thetaChange = Math.toDegrees(diff / HWConstants.CC_WIDTH);
+			else
+				thetaChange = Math.toDegrees(diff / HWConstants.C_WIDTH);
 			
 			//Distance between previous location and current location in cm.
 			double distanceChange = (leftDistance + rightDistance) / 2;

@@ -33,10 +33,8 @@ public class HWConstants {
 	 */
 	public static final double RIGHT_RADIUS;
 
-	/**
-	 * The distance between the wheels in cm.
-	 */
-	public static final double WIDTH;
+	public static final double CC_WIDTH;
+	public static final double C_WIDTH;
 
 	/**
 	 * The motor controlling the left wheel of the robot.
@@ -52,6 +50,17 @@ public class HWConstants {
 	 * The motor controlling the launching motion of the robot.
 	 */
 	public static final NXTRegulatedMotor LAUNCHER_MOTOR;
+	
+	/**
+	 * The distance fired at directly in front of the robot's center.
+	 */
+	public static final double LAUNCH_FRONT_DISTANCE;
+	
+	/**
+	 * The distance fired at perpendicular to the robot's center.
+	 * Positive values indicate a deviation to the right.
+	 */
+	public static final double LAUNCH_SIDE_DISTANCE;
 
 	/**
 	 * The direction of the robot's wheel motors. Can
@@ -113,13 +122,18 @@ public class HWConstants {
 		MASTER_ID = "NXT";
 		SLAVE_ID = "0016531258B4";
 		
-		LEFT_RADIUS = 2.06;
-		RIGHT_RADIUS = 2.06;
-		WIDTH = 14;
+		LEFT_RADIUS = 2.074;
+		RIGHT_RADIUS = 2.086;
+		CC_WIDTH = 16.8;
+		C_WIDTH = 16.645;
 
 		LEFT_MOTOR = Motor.A;
 		RIGHT_MOTOR = Motor.C;
 		LAUNCHER_MOTOR= Motor.B;
+		
+		LAUNCH_FRONT_DISTANCE = 120;
+		LAUNCH_SIDE_DISTANCE = -5;
+		
 		DIRECTION = 1;
 
 		LEFT_US_PORT = SensorPort.S1;
@@ -128,10 +142,10 @@ public class HWConstants {
 
 		LEFT_US = new UltrasonicSensor(LEFT_US_PORT);
 		FRONT_US = new UltrasonicSensor(FRONT_US_PORT);
-		US_DISTANCE = 7;
+		US_DISTANCE = 4;
 
 		CS = new ColorSensor(CS_PORT);
-		CS_DISTANCE = -12.5;
+		CS_DISTANCE = -11.5;
 		TILE_DISTANCE = 30.48;
 	}
 }

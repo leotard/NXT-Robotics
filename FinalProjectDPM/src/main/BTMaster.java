@@ -71,7 +71,7 @@ public class BTMaster {
 		final CSPoller cs = new CSPoller(dc);
 		final USLocalizer usl = new USLocalizer(dc, nav);
 		final CSLocalizer ll = new CSLocalizer(dc, nav);
-		final BluetoothComm bt = new BluetoothComm((byte)(0b1111), dc);
+		final BluetoothComm bt = new BluetoothComm((byte)(0xF), dc);
 		final Launcher launcher = new Launcher(HWConstants.LAUNCHER_MOTOR);
 
 		//Starts the threads.
