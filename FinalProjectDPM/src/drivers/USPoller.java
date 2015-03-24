@@ -5,7 +5,6 @@ import lejos.nxt.UltrasonicSensor;
 /**
  * A thread that polls the ultrasonic sensor for distance
  * values and sends them to be processed.
- * TODO: Add methods to turn the poller on and off. Refine algorithm.
  * 
  * @author Andrei Purcarus
  *

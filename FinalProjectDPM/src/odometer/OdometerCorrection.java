@@ -103,12 +103,12 @@ public class OdometerCorrection implements CSListener {
 		//x than to y and vice versa in the case of intersections.
 		if (distX < BANDWIDTH && distY < BANDWIDTH && 
 				distX / distY > 1/MAX_RATIO && distX / distY < MAX_RATIO) {
-			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad));
-			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad));
+			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad + HWConstants.CS_ANGLE));
+			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad + HWConstants.CS_ANGLE));
 		} else if (distX < BANDWIDTH && distX / distY <= 1/MAX_RATIO) {
-			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad));
+			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad + HWConstants.CS_ANGLE));
 		} else if (distY < BANDWIDTH && distX / distY >= MAX_RATIO) {
-			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad));
+			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad + HWConstants.CS_ANGLE));
 		}
 	}
 }

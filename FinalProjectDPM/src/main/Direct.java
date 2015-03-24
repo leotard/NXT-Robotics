@@ -9,7 +9,6 @@ import drivers.Navigation;
 import drivers.USPoller;
 import util.Point;
 import lejos.nxt.Button;
-import lejos.nxt.Sound;
 import localization.CSLocalizer;
 import localization.USLocalizer;
 
@@ -91,15 +90,7 @@ public class Direct {
 				pause();
 				
 				nav.turnTo(90);
-				//Tells the slave NXT to fire shots times.
-				for (int i = 0; i < shots; ++i) {
-					boolean confirmation = launcher.isActive();
-					launcher.fire();
-					if (confirmation != false) {
-						Sound.twoBeeps();
-						throw new RuntimeException("Invalid command return.");
-					}
-				}
+				launcher.fire(shots);
 				
 				//Turns to 45 degrees for the light localization.
 				nav.turnTo(45);

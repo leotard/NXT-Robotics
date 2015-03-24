@@ -31,17 +31,11 @@ public class Launcher {
 	private final NXTRegulatedMotor LAUNCHER;
 	
 	/**
-	 * Status of launcher.
-	 */
-	private boolean active;
-	
-	/**
 	 * Default constructor.
 	 * @param launcher The motor controlling the launcher.
 	 */
 	public Launcher(NXTRegulatedMotor launcher) {
 		LAUNCHER = launcher;
-		active=false;
 	}
 	
 	/**
@@ -80,9 +74,8 @@ public class Launcher {
 	 * active state.
 	 */
 	private void activate() {
-		active=true;
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(-560);
+		LAUNCHER.rotate(-540);
 	}
 	
 	/**
@@ -91,7 +84,7 @@ public class Launcher {
 	 */
 	private void activateFromLaunch() {
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(-495);
+		LAUNCHER.rotate(-450);
 	}
 	
 	/**
@@ -99,9 +92,9 @@ public class Launcher {
 	 */
 	private void arm() {
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(290);
+		LAUNCHER.rotate(260);
 		LAUNCHER.setSpeed(LOW);
-		LAUNCHER.rotate(90);
+		LAUNCHER.rotate(100);
 	}
 	
 	/**
@@ -120,14 +113,5 @@ public class Launcher {
 	private void store() {
 		LAUNCHER.setSpeed(HIGH);
 		LAUNCHER.rotate(90);
-		active=false;
-	}
-	
-	/**
-	 * Check the status of the launcher
-	 * @return active Boolean indicating the status of the launcher
-	 */
-	public boolean isActive (){
-		return active;
 	}
 }

@@ -33,7 +33,14 @@ public class HWConstants {
 	 */
 	public static final double RIGHT_RADIUS;
 
+	/**
+	 * The distance between the robot's wheels when turning counter-clockwise.
+	 */
 	public static final double CC_WIDTH;
+	
+	/**
+	 * The distance between the robot's wheels when turning clockwise.
+	 */
 	public static final double C_WIDTH;
 
 	/**
@@ -62,6 +69,16 @@ public class HWConstants {
 	 */
 	public static final double LAUNCH_SIDE_DISTANCE;
 
+	/**
+	 * Distance of the ball fired.
+	 */
+	public static final double LAUNCH_DISTANCE;
+	
+	/**
+	 * Angle relative to orientation of robot that the launcher fires at.
+	 */
+	public static final double LAUNCH_ANGLE;
+	
 	/**
 	 * The direction of the robot's wheel motors. Can
 	 * be either 1 if the motors rotating forward make
@@ -108,11 +125,31 @@ public class HWConstants {
 
 	/**
 	 * The distance between the center of rotation of the robot and
-	 * the color sensor in cm. Negative values indicate that the 
-	 * color sensor is placed behind the center of the robot.
+	 * the color sensor in cm, aligned with the robot's orientation. 
+	 * Negative values indicate that the color sensor is placed behind 
+	 * the center of the robot.
+	 */
+	public static final double FRONT_CS_DISTANCE;
+
+	/**
+	 * The distance between the center of rotation of the robot and
+	 * the color sensor in cm, perpendicular to the robot's orientation. 
+	 * Negative values indicate that the color sensor is placed in the negative 
+	 * x axis of the robots' frame.
+	 */
+	public static final double SIDE_CS_DISTANCE;
+	
+	/**
+	 * Distance from the robot's center of rotation to the color sensor.
 	 */
 	public static final double CS_DISTANCE;
-
+	
+	/**
+	 * Angle at which the CS is oriented relative to the robot's orientation.
+	 * This is taken as if the positive orientation of the robot is the x-axis.
+	 */
+	public static final double CS_ANGLE;
+	
 	/**
 	 * The distance in cm between parallel grid lines in the field.
 	 */
@@ -133,7 +170,9 @@ public class HWConstants {
 		
 		LAUNCH_FRONT_DISTANCE = 120;
 		LAUNCH_SIDE_DISTANCE = -5;
-		
+		LAUNCH_DISTANCE = Math.sqrt(LAUNCH_FRONT_DISTANCE * LAUNCH_FRONT_DISTANCE +
+				LAUNCH_SIDE_DISTANCE * LAUNCH_SIDE_DISTANCE);
+		LAUNCH_ANGLE = Math.atan2(-LAUNCH_SIDE_DISTANCE, LAUNCH_FRONT_DISTANCE);
 		DIRECTION = 1;
 
 		LEFT_US_PORT = SensorPort.S1;
@@ -145,7 +184,11 @@ public class HWConstants {
 		US_DISTANCE = 4;
 
 		CS = new ColorSensor(CS_PORT);
-		CS_DISTANCE = -11.5;
+		FRONT_CS_DISTANCE = -11.5;
+		SIDE_CS_DISTANCE = 1.0;
+		CS_DISTANCE = Math.sqrt(FRONT_CS_DISTANCE * FRONT_CS_DISTANCE +
+				SIDE_CS_DISTANCE * SIDE_CS_DISTANCE);
+		CS_ANGLE = Math.atan2(-SIDE_CS_DISTANCE, FRONT_CS_DISTANCE);
 		TILE_DISTANCE = 30.48;
 	}
 }

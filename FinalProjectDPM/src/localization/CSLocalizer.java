@@ -7,11 +7,21 @@ import interfaces.CSListener;
 
 /**
  * Class to perform localization using the color sensor.
+ * TODO: Correct algorithm to account for CS not being 
+ * exactly aligned with the robot.
+ * TODO: Account for the width of the lines in the algorithm.
+ * TODO: Fix bug where robot turns 90 degrees off. Place the robot
+ * on all sides of the grid and have it localize to find the bug.
  * 
  * @author Andrei Purcarus
  *
  */
 public class CSLocalizer implements CSListener {
+	/**
+	 * Number of ms to wait after finishing localization to allow
+	 * other processes to update.
+	 */
+	private static final long TIMEOUT = 100;
 	/**
 	 * The number of grid lines to detect during localization.
 	 */
@@ -152,12 +162,23 @@ public class CSLocalizer implements CSListener {
 		else
 			y = yGrid - HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
 		
+		//TODO implement this properly.
+		//Computes the estimated errors due to the width of the lines.
+		double errorX = Math.atan(Math.abs(data[2][1] - data[0][1] / data[2][0] - data[0][0]));
+		double errorY = Math.atan(Math.abs(data[3][1] - data[1][1] / data[3][0] - data[1][0]));
+		double averageWidthError = (errorX + errorY) / 2;
+		
 		//Gets current distance.
 		double[] dist = dc.getXYT();
 		//Corrects the position.
 		double actualAngle = dist[2] + averageError;
 		actualAngle = Util.toRange(actualAngle, 0.0, false);
 		dc.setXYT(x, y, actualAngle);
+		try {
+			Thread.sleep(TIMEOUT);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

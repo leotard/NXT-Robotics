@@ -5,7 +5,6 @@ import lejos.nxt.Sound;
 /**
  * A class that continuously polls the color sensor for data and
  * uses that data to detect grid lines on the floor.
- * TODO: Refine algorithm.
  * 
  * @author Andrei Purcarus
  *
@@ -51,7 +50,7 @@ public class CSPoller extends Thread {
 		while (true) {
 			int csValue = poll();
 			dc.setCSValue(csValue);
-			int current = getCurrentMean();
+			int current = getMean();
 			//Checks if the current value is less than the previous one.
 			if (current < MAX_GRID)  {
 				Sound.beep();
@@ -83,15 +82,15 @@ public class CSPoller extends Thread {
 	}
 	
 	/**
-	 * Computes the mean of the last NUM_VALUES - NUM_VALUES/2 data readings and returns it.
-	 * @return The mean of the last NUM_VALUES - NUM_VALUES/2 data readings.
+	 * Computes the mean of the last data readings and returns it.
+	 * @return The mean of the last data readings.
 	 */
-	private int getCurrentMean() {
+	private int getMean() {
 		int mean = 0;
-		for (int i = NUM_VALUES/2; i < NUM_VALUES; ++i) {
+		for (int i = 0; i < NUM_VALUES; ++i) {
 			mean += data[i];
 		}
-		mean /= (NUM_VALUES - NUM_VALUES/2);
+		mean /= NUM_VALUES;
 		return mean;
 	}
 }

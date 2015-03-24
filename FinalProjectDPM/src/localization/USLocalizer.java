@@ -1,5 +1,6 @@
 package localization;
 import java.util.ArrayList;
+
 import util.Util;
 import data.DataCenter;
 import drivers.HWConstants;
@@ -37,10 +38,16 @@ public class USLocalizer {
 	}
 	
 	/**
+	 * Number of ms to wait after finishing localization to allow
+	 * other processes to update.
+	 */
+	private static final long TIMEOUT = 100;
+	
+	/**
 	 * The speed to use during turning for the right motor. The 
 	 * speed of the left motor is scaled appropriately.
 	 */
-	private static final int TURN_SPD = 90;
+	private static final int TURN_SPD = 120;
 	
 	/**
 	 * The location from which to get data from the ultrasonic sensor.
@@ -110,23 +117,19 @@ public class USLocalizer {
 			}
 		}
 		
-		//Finds all triples with the same distance as the minimum.
-		ArrayList<Triple> minimums = new ArrayList<Triple>();
+		//Takes the average of all the angles for which the distance is minimal.
+		//Scales this sum such that min.angle = 0 and all angles are in
+		//(-180, 180] to ensure the results are accurate.
+		double sum = 0;
+		int count = 0;
 		for (Triple p : pos) {
 			if (p.distance == min.distance) {
-				minimums.add(p);
+				++count;
+				sum += Util.toRange(p.angle - min.angle, -180.0, true);
 			}
 		}
-		
-		//Finds the median minimum. We know min will have the same distance
-		//as the other minima, so we only need to change the angle.
-		if (minimums.size() % 2 == 0) {
-			Triple aboveMedian = minimums.get(minimums.size()/2);
-			Triple belowMedian = minimums.get(minimums.size()/2 - 1);
-			min.angle = (aboveMedian.angle + belowMedian.angle) / 2;
-		} else {
-			min.angle = (minimums.get(minimums.size() / 2)).angle;
-		}
+		//Resets the average in [0, 360).
+		min.angle = Util.toRange(sum / count + min.angle, 0.0, false);
 		
 		//Find the triples at +- 90 degrees from the minimum.
 		double minusAngle = Util.toRange(min.angle - 90.0, 0.0, false);
@@ -157,6 +160,11 @@ public class USLocalizer {
 			double angleCorrect = Util.toRange(270.0 - min.angle, 0.0, false);
 			double angle = Util.toRange(dc.getTheta() + angleCorrect, 0.0, false);
 			dc.setXYT(x, y, angle);
+		}
+		try {
+			Thread.sleep(TIMEOUT);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 	

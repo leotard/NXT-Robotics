@@ -16,15 +16,15 @@ public class Navigation {
 	/**
 	 * The lowest speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int LOW_SPD = 200;
+	private static final int LOW_SPD = 100;
 	/**
 	 * The intermediate speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int MID_SPD = 300;
+	private static final int MID_SPD = 200;
 	/**
 	 * The highest speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int HIGH_SPD = 400;
+	private static final int HIGH_SPD = 300;
 	/**
 	 * The default speed used by the right motor while rotating in place.
 	 * The left motor speed is scaled accordingly.
@@ -33,16 +33,16 @@ public class Navigation {
 	/**
 	 * The acceleration used by the robot's motors in deg/s/s.
 	 */
-	private static final int ACCELERATION = 500;
+	private static final int ACCELERATION = 1000;
 
 	/**
 	 * The maximum error in x or y when traveling to a point, in cm.
 	 */
-	private final double CM_ERR = 2.0;
+	private final double CM_ERR = 1.0;
 	/**
 	 * The maximum error in angle when traveling to a point, in degrees.
 	 */
-	private final double DEG_ERR = 5.0;
+	private final double DEG_ERR = 2.0;
 	/**
 	 * When the robot's heading is within this, in degrees, of the heading 
 	 * towards destination, stops wall following.
@@ -52,11 +52,11 @@ public class Navigation {
 	/**
 	 * The minimum distance in cm from a frontal obstacle to keep the robot at.
 	 */
-	private final int MIN_FRONT_DISTANCE = 30;
+	private final int MIN_FRONT_DISTANCE = 20;
 	/**
 	 * The minimum distance in cm from a side obstacle to keep the robot at.
 	 */
-	private final int MIN_SIDE_DISTANCE = 15;
+	private final int MIN_SIDE_DISTANCE = 10;
 	
 	/**
 	 * The location where the navigator can get data.
@@ -127,6 +127,35 @@ public class Navigation {
 		}
 		//Travels to point.
 		travelToPoint(x, y, obstacles);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Moves the robot forward a specified distance.
+	 * @param distance The distance to move forward by. Negative
+	 * 				   distances mean moving backwards.
+	 * @param obstacles Should the navigator check for obstacles?
+	 */
+	public void moveForward(double distance, boolean obstacles) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		double[] xyt = dc.getXYT();
+		//Travels to point.
+		travelToPoint(xyt[0] + distance * Math.cos(Math.toRadians(xyt[2])),
+				xyt[1] + distance * Math.sin(Math.toRadians(xyt[2])), 
+				obstacles);
 		//Sets the robot to not navigating.
 		synchronized (this) {
 			this.navigating = false;

@@ -12,7 +12,6 @@ import drivers.HWConstants;
 import drivers.Navigation;
 import drivers.USPoller;
 import lejos.nxt.Button;
-import lejos.nxt.Sound;
 import localization.CSLocalizer;
 import localization.USLocalizer;
 
@@ -123,12 +122,7 @@ public class BTMaster {
 							ll.doLocalization();
 							break;
 						case SHOOT:
-							boolean confirmation = launcher.isActive();
 							launcher.fire();
-							if (confirmation != false) {
-								Sound.twoBeeps();
-								throw new RuntimeException("Invalid command return.");
-							}
 							break;
 						case EXIT:
 							
