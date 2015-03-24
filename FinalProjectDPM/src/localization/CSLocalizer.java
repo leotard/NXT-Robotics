@@ -113,6 +113,10 @@ public class CSLocalizer implements CSListener {
 		}
 		dc.removeListener(this);
 		count = 0;
+		//Averages the last data point with the last temporary.
+		data[3][0] = (data[3][0] + temp[0]) / 2;
+		data[3][1] = (data[3][1] + temp[1]) / 2;
+		data[3][2] = (data[3][2] + temp[2]) / 2;
 		
 		//Computes the difference between the x and y angles measured.
 		//Makes the difference be in the (-180, 180] range.
@@ -154,19 +158,13 @@ public class CSLocalizer implements CSListener {
 		//Computes the current position x, y in cm.
 		double x, y;
 		if (thetaYDiff >= 0.0)
-			x = xGrid + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaYDiff)/2);
-		else
 			x = xGrid - HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaYDiff)/2);
-		if (thetaXDiff >= 0.0)
-			y = yGrid + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
 		else
+			x = xGrid + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaYDiff)/2);
+		if (thetaXDiff >= 0.0)
 			y = yGrid - HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
-		
-		//TODO implement this properly.
-		//Computes the estimated errors due to the width of the lines.
-		double errorX = Math.atan(Math.abs(data[2][1] - data[0][1] / data[2][0] - data[0][0]));
-		double errorY = Math.atan(Math.abs(data[3][1] - data[1][1] / data[3][0] - data[1][0]));
-		double averageWidthError = (errorX + errorY) / 2;
+		else
+			y = yGrid + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
 		
 		//Gets current distance.
 		double[] dist = dc.getXYT();
@@ -182,6 +180,11 @@ public class CSLocalizer implements CSListener {
 	}
 
 	/**
+	 * Temporary variable used to compute the center of the bandwidth.
+	 */
+	private double[] temp = null;
+	
+	/**
 	 * The method to be called to notify the
 	 * listener of a grid line detection by
 	 * the color sensor.
@@ -190,6 +193,12 @@ public class CSLocalizer implements CSListener {
 	public void ping() {
 		long currentPing = System.currentTimeMillis();
 		if (currentPing - lastPing > DELAY) {
+			//Averages the last temporary with the last data.
+			if (temp != null) {
+				data[count - 1][0] = (data[count - 1][0] + temp[0]) / 2;
+				data[count - 1][1] = (data[count - 1][1] + temp[1]) / 2;
+				data[count - 1][2] = (data[count - 1][2] + temp[2]) / 2;
+			}
 			if (count < NUM_LINES) {
 				data[count] = dc.getXYT();
 				++count;
@@ -197,6 +206,8 @@ public class CSLocalizer implements CSListener {
 				count = NUM_LINES + 1;
 			}
 			lastPing = currentPing;
+		} else {
+			temp = dc.getXYT();
 		}
 	}
 }
