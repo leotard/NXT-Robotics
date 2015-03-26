@@ -23,9 +23,10 @@ public class DataCenter {
 	private boolean isWallFollowing;
 	/**
 	 * The number of distances to keep track of.
-	 * These correspond to 90 degrees (front) and 180 degrees (left).
+	 * These correspond to 0 degrees (right), 
+	 * 90 degrees (front) and 180 degrees (left).
 	 */
-	private static final int NUM_DISTANCES = 2;
+	private static final int NUM_DISTANCES = 3;
 	/**
 	 * The distances in cm recorded by the ultrasonic sensors.
 	 */
@@ -129,20 +130,23 @@ public class DataCenter {
 	/**
 	 * Sets the distance in cm from the robot to the wall at
 	 * an angle in degrees counterclockwise from the right of the robot.
-	 * Accepts angles of 90 degrees and 180 degrees.
+	 * Accepts angles of 0 degrees, 90 degrees and 180 degrees.
 	 * @param distance The distance to the wall in cm.
 	 * @param angle The angle at which the distance
 	 * 				is measured in degrees. Accepts angles of 
-	 * 				90 degrees and 180 degrees.
+	 * 				0 degrees, 90 degrees and 180 degrees.
 	 */
 	public void setDistance(int distance, int angle) {
 		synchronized (usLock) {
 			switch (angle) {
-			case 90:
+			case 0:
 				distances[0] = distance;
 				break;
-			case 180:
+			case 90:
 				distances[1] = distance;
+				break;
+			case 180:
+				distances[2] = distance;
 				break;
 			default:
 				throw new RuntimeException(
@@ -154,20 +158,23 @@ public class DataCenter {
 	/**
 	 * Sets the filtered distance in cm from the robot to the wall at
 	 * an angle in degrees counterclockwise from the right of the robot.
-	 * Accepts angles of 90 degrees and 180 degrees.
+	 * Accepts angles of 0 degrees, 90 degrees and 180 degrees.
 	 * @param distance The filtered distance to the wall in cm.
 	 * @param angle The angle at which the distance
 	 * 				is measured in degrees. Accepts angles of 
-	 * 				90 degrees and 180 degrees.
+	 * 				0 degrees, 90 degrees and 180 degrees.
 	 */
 	public void setFilteredDistance(int distance, int angle) {
 		synchronized (usLock) {
 			switch (angle) {
-			case 90:
+			case 0:
 				filteredDistances[0] = distance;
 				break;
-			case 180:
+			case 90:
 				filteredDistances[1] = distance;
+				break;
+			case 180:
+				filteredDistances[2] = distance;
 				break;
 			default:
 				throw new RuntimeException(
@@ -179,20 +186,22 @@ public class DataCenter {
 	/**
 	 * Returns the distance in cm from the robot to
 	 * the wall at the specified angle in degrees.
-	 * Accepts angles of 90 degrees and 180 degrees.
+	 * Accepts angles of 0 degrees, 90 degrees and 180 degrees.
 	 * @param angle The angle from the robot
 	 * 				to the wall in degrees. Accepts 
-	 * 				90 degrees and 180 degrees as values.
+	 * 				0 degrees, 90 degrees and 180 degrees as values.
 	 * @return The distance in cm to the wall at the
 	 * 		   specified angle.
 	 */
 	public int getDistance(int angle) {
 		synchronized (usLock) {
 			switch (angle) {
-			case 90:
+			case 0:
 				return distances[0];
-			case 180:
+			case 90:
 				return distances[1];
+			case 180:
+				return distances[2];
 			default:
 				throw new RuntimeException(
 					"Invalid angle passed to DataCenter::getDistance.");
@@ -203,20 +212,22 @@ public class DataCenter {
 	/**
 	 * Returns the filtered distance in cm from the robot to
 	 * the wall at the specified angle in degrees.
-	 * Accepts angles of 90 degrees and 180 degrees.
+	 * Accepts angles of 0 degrees, 90 degrees and 180 degrees.
 	 * @param angle The angle from the robot
 	 * 				to the wall in degrees. Accepts 
-	 * 				90 degrees and 180 degrees as values.
+	 * 				0 degrees, 90 degrees and 180 degrees as values.
 	 * @return The filtered distance in cm to the wall at the
 	 * 		   specified angle.
 	 */
 	public int getFilteredDistance(int angle) {
 		synchronized (usLock) {
 			switch (angle) {
-			case 90:
+			case 0:
 				return filteredDistances[0];
-			case 180:
+			case 90:
 				return filteredDistances[1];
+			case 180:
+				return filteredDistances[2];
 			default:
 				throw new RuntimeException(
 					"Invalid angle passed to DataCenter::getFilteredDistance.");

@@ -47,13 +47,17 @@ public class USPoller extends Thread {
 	 * Default constructor.
 	 * @param angle The angle in degrees at which the ultrasonic sensor is positioned,
 	 *				with 0 degrees being the right of the robot and angles
-	 *				increasing counterclockwise. Valid angles are 90 degrees 
-	 * 				and 180 degrees.
+	 *				increasing counterclockwise. Valid angles are 0 degrees, 
+	 *				90 degrees and 180 degrees.
 	 * @param dc The data storage location to send data to.
 	 */
 	public USPoller(int angle, DataCenter dc) {
 		this.dc = dc;
 		switch (angle) {
+		case 0:
+			US = HWConstants.RIGHT_US;
+			ANGLE = angle;
+			break;
 		case 90:
 			US = HWConstants.FRONT_US;
 			ANGLE = angle;
@@ -88,7 +92,7 @@ public class USPoller extends Thread {
 				dc.setDistance(distances[0], ANGLE);
 				dc.setFilteredDistance(distances[1], ANGLE);
 				break;
-			case 180: {
+			case 0: case 180: {
 				boolean wallFollowing = dc.getWallFollowing();
 				if (wallFollowing) {
 					if (paused) {

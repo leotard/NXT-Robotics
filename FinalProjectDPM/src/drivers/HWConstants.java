@@ -13,15 +13,6 @@ import lejos.nxt.UltrasonicSensor;
  * 
  */
 public class HWConstants {
-	/**
-	 * The ID of the master NXT brick.
-	 */
-	public static final String MASTER_ID;
-	
-	/**
-	 * The ID of the slave NXT brick.
-	 */
-	public static final String SLAVE_ID;
 	
 	/**
 	 * The radius of the left wheel in cm.
@@ -42,6 +33,20 @@ public class HWConstants {
 	 * The distance between the robot's wheels when turning clockwise.
 	 */
 	public static final double C_WIDTH;
+	
+	/**
+	 * The distance between the robot's wheels when turning on the left wheel.
+	 * This means that the left wheel is stationary and the right wheel does 
+	 * the turning.
+	 */
+	public static final double L_WIDTH;
+	
+	/**
+	 * The distance between the robot's wheels when turning on the right wheel.
+	 * This means that the right wheel is stationary and the left wheel does 
+	 * the turning.
+	 */
+	public static final double R_WIDTH;
 
 	/**
 	 * The motor controlling the left wheel of the robot.
@@ -60,6 +65,7 @@ public class HWConstants {
 	
 	/**
 	 * The distance fired at directly in front of the robot's center.
+	 * Negative distances indicate a backwards launcher.
 	 */
 	public static final double LAUNCH_FRONT_DISTANCE;
 	
@@ -98,6 +104,11 @@ public class HWConstants {
 	public static final SensorPort FRONT_US_PORT;
 
 	/**
+	 * The sensor port for the right ultrasonic sensor.
+	 */
+	public static final SensorPort RIGHT_US_PORT;
+	
+	/**
 	 * The sensor port for the color sensor.
 	 */
 	public static final SensorPort CS_PORT;
@@ -113,11 +124,28 @@ public class HWConstants {
 	public static final UltrasonicSensor FRONT_US;
 	
 	/**
+	 * The ultrasonic sensor polling the right of the robot.
+	 */
+	public static final UltrasonicSensor RIGHT_US;
+	
+	/**
+	 * The distance in cm between the left ultrasonic sensor and
+	 * the central axis of symmetry of the NXT brick.
+	 */
+	public static final double LEFT_US_DISTANCE;
+	
+	/**
 	 * The distance in cm between the front ultrasonic sensor
 	 * and the robot's center of rotation.
 	 */
-	public static final double US_DISTANCE;
+	public static final double FRONT_US_DISTANCE;
 
+	/**
+	 * The distance in cm between the right ultrasonic sensor and
+	 * the central axis of symmetry of the NXT brick.
+	 */
+	public static final double RIGHT_US_DISTANCE;
+	
 	/**
 	 * The color sensor used by the robot to detect grid lines.
 	 */
@@ -140,12 +168,12 @@ public class HWConstants {
 	public static final double SIDE_CS_DISTANCE;
 	
 	/**
-	 * Distance from the robot's center of rotation to the color sensor.
+	 * Distance from the robot's center of rotation to the color sensor, in cm.
 	 */
 	public static final double CS_DISTANCE;
 	
 	/**
-	 * Angle at which the CS is oriented relative to the robot's orientation.
+	 * Angle in degrees at which the CS is oriented relative to the robot's orientation.
 	 * This is taken as if the positive orientation of the robot is the x-axis.
 	 */
 	public static final double CS_ANGLE;
@@ -156,39 +184,42 @@ public class HWConstants {
 	public static final double TILE_DISTANCE;
 
 	static {
-		MASTER_ID = "NXT";
-		SLAVE_ID = "0016531258B4";
-		
-		LEFT_RADIUS = 2.074;
-		RIGHT_RADIUS = 2.086;
-		CC_WIDTH = 16.8;
-		C_WIDTH = 16.645;
+		LEFT_RADIUS = 2.072;
+		RIGHT_RADIUS = 2.083;
+		CC_WIDTH = 17.16;
+		C_WIDTH = 17.1;
+		L_WIDTH = 17.1;
+		R_WIDTH = 17.1;
 
 		LEFT_MOTOR = Motor.A;
 		RIGHT_MOTOR = Motor.C;
 		LAUNCHER_MOTOR= Motor.B;
 		
-		LAUNCH_FRONT_DISTANCE = 120;
-		LAUNCH_SIDE_DISTANCE = -5;
+		LAUNCH_FRONT_DISTANCE = 108.26;
+		LAUNCH_SIDE_DISTANCE = -5.54;
 		LAUNCH_DISTANCE = Math.sqrt(LAUNCH_FRONT_DISTANCE * LAUNCH_FRONT_DISTANCE +
 				LAUNCH_SIDE_DISTANCE * LAUNCH_SIDE_DISTANCE);
-		LAUNCH_ANGLE = Math.atan2(-LAUNCH_SIDE_DISTANCE, LAUNCH_FRONT_DISTANCE);
+		LAUNCH_ANGLE = Math.toDegrees(Math.atan2(-LAUNCH_SIDE_DISTANCE, LAUNCH_FRONT_DISTANCE));
 		DIRECTION = 1;
 
 		LEFT_US_PORT = SensorPort.S1;
 		FRONT_US_PORT = SensorPort.S3;
+		RIGHT_US_PORT = SensorPort.S4;
 		CS_PORT = SensorPort.S2;
 
 		LEFT_US = new UltrasonicSensor(LEFT_US_PORT);
 		FRONT_US = new UltrasonicSensor(FRONT_US_PORT);
-		US_DISTANCE = 4;
+		RIGHT_US = new UltrasonicSensor(RIGHT_US_PORT);
+		LEFT_US_DISTANCE = 4;
+		FRONT_US_DISTANCE = 4;
+		RIGHT_US_DISTANCE = 4;
 
 		CS = new ColorSensor(CS_PORT);
 		FRONT_CS_DISTANCE = -11.5;
-		SIDE_CS_DISTANCE = 1.0;
+		SIDE_CS_DISTANCE = -0.3;
 		CS_DISTANCE = Math.sqrt(FRONT_CS_DISTANCE * FRONT_CS_DISTANCE +
 				SIDE_CS_DISTANCE * SIDE_CS_DISTANCE);
-		CS_ANGLE = Math.atan2(-SIDE_CS_DISTANCE, FRONT_CS_DISTANCE);
+		CS_ANGLE = Math.toDegrees(Math.atan2(-SIDE_CS_DISTANCE, FRONT_CS_DISTANCE));
 		TILE_DISTANCE = 30.48;
 	}
 }

@@ -13,7 +13,7 @@ public class CSPoller extends Thread {
 	/**
 	 * The maximum color value detected that can be taken as a grid line.
 	 */
-	private static final int MAX_GRID = 45;
+	private static final int MAX_GRID = 46;
 	
 	/**
 	 * The number of values to store to take the
@@ -41,8 +41,8 @@ public class CSPoller extends Thread {
 	}
 
 	/**
-	 * Method called when thread is started. Corrects the odometer
-	 * using the color sensor.
+	 * Method called when thread is started. Takes color sensor values
+	 * and notifies the data center when a grid line is detected.
 	 */
 	@Override
 	public void run() {
@@ -52,7 +52,7 @@ public class CSPoller extends Thread {
 			dc.setCSValue(csValue);
 			int current = getMean();
 			//Checks if the current value is less than the previous one.
-			if (current < MAX_GRID)  {
+			if (current <= MAX_GRID)  {
 				Sound.beep();
 				dc.notifyListeners();
 			}

@@ -16,12 +16,12 @@ import localization.USLocalizer;
 
 /**
  * The main class. Initializes the threads of execution
- * and starts them.
+ * and starts them. This class is used to execute the beta demo.
  * 
  * @author Andrei Purcarus
  * @author Leotard Niyonkuru
  */
-public class Mapped {
+public class BetaDemo {
 
 	/**
 	 * Main thread of execution of the robot. Starts all other threads.
@@ -47,17 +47,11 @@ public class Mapped {
 		final Point p4_tr = new Point(convert(1.5), convert(6.1));
 		final Point p5 = new Point(convert(4.5), convert(6.5));
 		final Point p6_destination = new Point(convert(6), convert(6));
-		final Point p7 = new Point(convert(4.5), convert(6.5));
-		final Point p8_tl = new Point(convert(1.9), convert(6.5));
-		final Point p9_tr = new Point(convert(1.5), convert(5.9));
-		final Point p10_tl = new Point(convert(-0.1), convert(5.5));
-		final Point p11 = new Point(convert(-0.5), convert(2.5));
-		final Point p12 = new Point(convert(0), convert(0));
 
 		//The position of the target.
 		final Point target = new Point(convert(9), convert(9));
 		//The number of shots to fire at each target.
-		final int shots = 3;
+		final int shots = 1;
 		
 		//Initializes the threads.
 		final DataCenter dc = new DataCenter();
@@ -106,30 +100,6 @@ public class Mapped {
 				//Fires shots times.
 				launcher.fire(shots);
 				
-				//Turns to 45 degrees for the light localization.
-				nav.travelTo(p6_destination, false);
-				nav.turnTo(45);
-				ll.doLocalization(p6_destination);
-				
-				//Returns to origin.
-				oc.start();
-				nav.travelTo(p7, false);
-				nav.travelTo(p8_tl, false);
-				nav.turnLeft();
-				nav.travelTo(p9_tr, false);
-				nav.turnRight();
-				nav.travelTo(p10_tl, false);
-				nav.turnLeft();
-				nav.travelTo(p11, false);
-				nav.travelTo(p12, false);
-				oc.stop();
-				
-				//Turns to 45 degrees for the light localization.
-				nav.turnTo(45);
-				ll.doLocalization();
-				nav.travelTo(p12, false);
-				nav.turnTo(90.0);
-					
 				System.exit(0);
 			}
 		}).start();

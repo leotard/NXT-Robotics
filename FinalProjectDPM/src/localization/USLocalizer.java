@@ -122,10 +122,17 @@ public class USLocalizer {
 		//(-180, 180] to ensure the results are accurate.
 		double sum = 0;
 		int count = 0;
+		double minAngle = 180.0;
+		double maxAngle = -180.0;
 		for (Triple p : pos) {
 			if (p.distance == min.distance) {
 				++count;
-				sum += Util.toRange(p.angle - min.angle, -180.0, true);
+				double angle = Util.toRange(p.angle - min.angle, -180.0, true);
+				sum += angle;
+				if (angle < minAngle)
+					minAngle = angle;
+				if (angle > maxAngle)
+					maxAngle = angle;
 			}
 		}
 		//Resets the average in [0, 360).
@@ -148,15 +155,24 @@ public class USLocalizer {
 		//xy = true means x -> min and y -> otherMin.
 		boolean xy = (Util.toRange(min.angle - otherMin.angle, -180.0, true) < 0);
 		//Sets x, y and theta using the values from min and otherMin.
-		if (xy) {
-			double x = HWConstants.US_DISTANCE + min.filteredDistance - HWConstants.TILE_DISTANCE;
-			double y = HWConstants.US_DISTANCE + otherMin.filteredDistance - HWConstants.TILE_DISTANCE;
+		if (maxAngle - minAngle >= 90) {
+			//This means that the robot is exactly on the y = x line, so special care must be taken.
+			//The x and y are computed using the minimum distance, and the angle is instead set as
+			//225 for the diagonal.
+			double x = HWConstants.FRONT_US_DISTANCE + min.filteredDistance - HWConstants.TILE_DISTANCE;
+			double y = HWConstants.FRONT_US_DISTANCE + otherMin.filteredDistance - HWConstants.TILE_DISTANCE;
+			double angleCorrect = Util.toRange(225.0 - min.angle, 0.0, false);
+			double angle = Util.toRange(dc.getTheta() + angleCorrect, 0.0, false);
+			dc.setXYT(x, y, angle);
+		} else if (xy) {
+			double x = HWConstants.FRONT_US_DISTANCE + min.filteredDistance - HWConstants.TILE_DISTANCE;
+			double y = HWConstants.FRONT_US_DISTANCE + otherMin.filteredDistance - HWConstants.TILE_DISTANCE;
 			double angleCorrect = Util.toRange(180.0 - min.angle, 0.0, false);
 			double angle = Util.toRange(dc.getTheta() + angleCorrect, 0.0, false);
 			dc.setXYT(x, y, angle);
 		} else {
-			double x = HWConstants.US_DISTANCE + otherMin.filteredDistance - HWConstants.TILE_DISTANCE;
-			double y = HWConstants.US_DISTANCE + min.filteredDistance - HWConstants.TILE_DISTANCE;
+			double x = HWConstants.FRONT_US_DISTANCE + otherMin.filteredDistance - HWConstants.TILE_DISTANCE;
+			double y = HWConstants.FRONT_US_DISTANCE + min.filteredDistance - HWConstants.TILE_DISTANCE;
 			double angleCorrect = Util.toRange(270.0 - min.angle, 0.0, false);
 			double angle = Util.toRange(dc.getTheta() + angleCorrect, 0.0, false);
 			dc.setXYT(x, y, angle);

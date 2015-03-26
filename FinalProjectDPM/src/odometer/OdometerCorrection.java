@@ -76,8 +76,8 @@ public class OdometerCorrection implements CSListener {
 		double thetaRad = Math.toRadians(position[2]);
 		
 		//Gets the position of the color sensor in cm.
-		double x = position[0] + HWConstants.CS_DISTANCE * Math.cos(thetaRad);
-		double y = position[1] + HWConstants.CS_DISTANCE * Math.sin(thetaRad);
+		double x = position[0] + HWConstants.CS_DISTANCE * Math.cos(thetaRad + Math.toRadians(HWConstants.CS_ANGLE));
+		double y = position[1] + HWConstants.CS_DISTANCE * Math.sin(thetaRad + Math.toRadians(HWConstants.CS_ANGLE));
 		
 		//Position of nearest marker in cm.
 		double markerX, markerY;
@@ -103,12 +103,12 @@ public class OdometerCorrection implements CSListener {
 		//x than to y and vice versa in the case of intersections.
 		if (distX < BANDWIDTH && distY < BANDWIDTH && 
 				distX / distY > 1/MAX_RATIO && distX / distY < MAX_RATIO) {
-			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad + HWConstants.CS_ANGLE));
-			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad + HWConstants.CS_ANGLE));
+			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad + Math.toRadians(HWConstants.CS_ANGLE)));
+			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad + Math.toRadians(HWConstants.CS_ANGLE)));
 		} else if (distX < BANDWIDTH && distX / distY <= 1/MAX_RATIO) {
-			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad + HWConstants.CS_ANGLE));
+			dc.setX(markerX - HWConstants.CS_DISTANCE * Math.cos(thetaRad + Math.toRadians(HWConstants.CS_ANGLE)));
 		} else if (distY < BANDWIDTH && distX / distY >= MAX_RATIO) {
-			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad + HWConstants.CS_ANGLE));
+			dc.setY(markerY - HWConstants.CS_DISTANCE * Math.sin(thetaRad + Math.toRadians(HWConstants.CS_ANGLE)));
 		}
 	}
 }

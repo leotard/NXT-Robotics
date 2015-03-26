@@ -1,0 +1,58 @@
+package main;
+import odometer.Odometer;
+import data.DataCenter;
+import drivers.HWConstants;
+import drivers.Navigation;
+import lejos.nxt.Button;
+
+/**
+ * The main class. Initializes the threads of execution
+ * and starts them.
+ * 
+ * @author Andrei Purcarus
+ * @author Leotard Niyonkuru
+ */
+public class Radii {
+
+	/**
+	 * Main thread of execution of the robot. Starts all other threads.
+	 */
+	public static void main(String [] args) {
+		//Wait for a button to start.
+		int buttonChoice = Button.waitForAnyPress();
+		switch (buttonChoice) {
+		case Button.ID_ENTER: case Button.ID_LEFT: case Button.ID_RIGHT:
+			break;
+		case Button.ID_ESCAPE:
+			return;
+		default:
+			throw new RuntimeException("Impossible button press.");
+		}
+		
+		//Initializes the threads.
+		final DataCenter dc = new DataCenter();
+		final Odometer odo = new Odometer(dc);
+		final Navigation nav = new Navigation(dc);
+
+		//Starts the threads.
+		odo.start();
+
+		(new Thread() {
+			public void run() {
+				nav.moveForward(convert(5), false);
+				System.exit(0);
+			}
+		}).start();
+		
+		//Wait for another button press to exit.
+		Button.waitForAnyPress();
+		System.exit(0);
+	}
+	
+	/**
+	 * Converts a coordinate in the field to cm.
+	 */
+	private static double convert(double x) {
+		return x * HWConstants.TILE_DISTANCE;
+	}
+}

@@ -50,11 +50,11 @@ public class Navigation {
 	private final double WALL_FOLLOW_DEG_ERR = 15.0;
 
 	/**
-	 * The minimum distance in cm from a frontal obstacle to keep the robot at.
+	 * The minimum distance in cm from a frontal obstacle to keep the robot's center at.
 	 */
 	private final int MIN_FRONT_DISTANCE = 20;
 	/**
-	 * The minimum distance in cm from a side obstacle to keep the robot at.
+	 * The minimum distance in cm from a side obstacle to keep the robot's center at.
 	 */
 	private final int MIN_SIDE_DISTANCE = 10;
 	
@@ -82,55 +82,28 @@ public class Navigation {
 	/**
 	 * Makes the robot move to the points on the given path.
 	 * @param path The path to travel.
+	 * @param obstacles Should the navigator check for obstacles?
 	 */
-	public void travel(Point[] path) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+	public void travel(Point[] path, boolean obstacles) {
+		lock();
 		//Travels through the path.
 		for (Point p : path) {
-			travelToPoint(p.x, p.y, true);
+			travelToPoint(p, obstacles);
 		}
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		unlock();
 	}
 
 	/**
 	 * Synchronized public version of the travel to method for
-	 * calls from other threads. Takes the robot to position (x, y).
-	 * The positions are in cm.
-	 * @param x The destination x coordinate in cm.
-	 * @param y The destination y coordinate in cm.
+	 * calls from other threads. Takes the robot to the destination.
+	 * @param destination
 	 * @param obstacles Should the navigator check for obstacles?
 	 */
-	public void travelTo(double x, double y, boolean obstacles) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+	public void travelTo(Point destination, boolean obstacles) {
+		lock();
 		//Travels to point.
-		travelToPoint(x, y, obstacles);
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		travelToPoint(destination, obstacles);
+		unlock();
 	}
 	
 	/**
@@ -140,26 +113,13 @@ public class Navigation {
 	 * @param obstacles Should the navigator check for obstacles?
 	 */
 	public void moveForward(double distance, boolean obstacles) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+		lock();
 		double[] xyt = dc.getXYT();
 		//Travels to point.
-		travelToPoint(xyt[0] + distance * Math.cos(Math.toRadians(xyt[2])),
-				xyt[1] + distance * Math.sin(Math.toRadians(xyt[2])), 
-				obstacles);
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		Point destination = new Point(xyt[0] + distance * Math.cos(Math.toRadians(xyt[2])),
+				xyt[1] + distance * Math.sin(Math.toRadians(xyt[2])));
+		travelToPoint(destination, obstacles);
+		unlock();
 	}
 	
 	/**
@@ -168,23 +128,10 @@ public class Navigation {
 	 * @param angle The final heading of the robot in degrees.
 	 */
 	public void turnTo(double angle) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+		lock();
 		//Turns to specified angle.
 		turnToAngle(angle);
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		unlock();
 	}
 	
 	/**
@@ -196,23 +143,10 @@ public class Navigation {
 	 * 				motor's speed is scaled appropriately.
 	 */
 	public void turnTo(double angle, int speed) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+		lock();
 		//Turns to specified angle.
 		turnToAngle(angle, speed);
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		unlock();
 	}
 	
 	/**
@@ -221,23 +155,10 @@ public class Navigation {
 	 * @param angle The angle to turn by in degrees.
 	 */
 	public void turn(double angle) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+		lock();
 		//Turns by the specified angle counterclockwise.
 		turnAngle(angle);
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		unlock();
 	}
 	
 	/**
@@ -249,23 +170,10 @@ public class Navigation {
 	 * 				motor's speed is scaled appropriately.
 	 */
 	public void turn(double angle, int speed) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+		lock();
 		//Turns by the specified angle counterclockwise.
 		turnAngle(angle, speed);
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		unlock();
 	}
 	
 	/**
@@ -275,23 +183,10 @@ public class Navigation {
 	 * @param rSpd The speed of the right motor to set in deg/s.
 	 */
 	public void setSpeeds(int lSpd, int rSpd) {
-		//Waits until the robot is not navigating to start.
-		boolean navigating = true;
-		while (navigating) {
-			synchronized (this) {
-				navigating = this.navigating;
-			}
-		}
-		//Sets the robot to navigating.
-		synchronized (this) {
-			this.navigating = true;
-		}
+		lock();
 		//Sets the motor speeds.
 		setMotorSpeeds(lSpd, rSpd);
-		//Sets the robot to not navigating.
-		synchronized (this) {
-			this.navigating = false;
-		}
+		unlock();
 	}
 	
 	/**
@@ -306,11 +201,10 @@ public class Navigation {
 	
 	/**
 	 * Takes the robot to position (x, y), where x and y are in cm.
-	 * @param x The destination x coordinate in cm.
-	 * @param y The destination y coordinate in cm.
+	 * @param destination
 	 * @param obstacles Should the navigator check for obstacles? 
 	 */
-	private void travelToPoint(double x, double y, boolean obstacles) {
+	private void travelToPoint(Point destination, boolean obstacles) {
 		//Gets the current x and y position in cm.
 		double[] xyt = dc.getXYT();
 		double currentX = xyt[0];
@@ -319,7 +213,7 @@ public class Navigation {
 		//Calculates the minimal absolute angle to the destination 
 		//and turns in that direction.
 		double minAng;
-		minAng = Math.toDegrees(Math.atan2(y - currentY, x - currentX));
+		minAng = Math.toDegrees(Math.atan2(destination.y - currentY, destination.x - currentX));
 		//Sets the angle in the range [0, 360).
 		minAng = Util.toRange(minAng, 0.0, false);
 		this.turnToAngle(minAng);
@@ -335,12 +229,17 @@ public class Navigation {
 			usData = dc.getFilteredDistance(90);
 		
 		//Loops while the robot is not at its destination.
-		while (Math.abs(x - currentX) > CM_ERR || Math.abs(y - currentY) > CM_ERR) {
-			setMotorSpeeds(MID_SPD, MID_SPD);
+		while (Math.abs(destination.x - currentX) > CM_ERR || Math.abs(destination.y - currentY) > CM_ERR) {
+			double dist = (destination.x - currentX)*(destination.x - currentX) + 
+					(destination.y - currentY)*(destination.y - currentY);
+			if (dist > HWConstants.TILE_DISTANCE)
+				dist = HWConstants.TILE_DISTANCE;
+			double speed = LOW_SPD + dist / (HWConstants.TILE_DISTANCE) * (HIGH_SPD - LOW_SPD);
+			setMotorSpeeds((int)speed, (int)speed);
 			
 			//If too close to the front of the wall, follow the wall.
 			if (obstacles && usData < MIN_FRONT_DISTANCE) {
-				wallFollow(x, y);
+				wallFollow(destination);
 			}
 
 			//Updates current position in cm.
@@ -350,7 +249,7 @@ public class Navigation {
 			
 			//Calculates the minimal absolute angle to the destination 
 			//and turns in that direction if the angle is off.
-			minAng = Math.toDegrees(Math.atan2(y - currentY, x - currentX));
+			minAng = Math.toDegrees(Math.atan2(destination.y - currentY, destination.x - currentX));
 			//Sets the angle in the range [0, 360).
 			minAng = Util.toRange(minAng, 0.0, false);
 			if (Math.abs(xyt[2] - minAng) > DEG_ERR && 
@@ -363,17 +262,15 @@ public class Navigation {
 				usData = dc.getFilteredDistance(90);
 		}
 		
-		setMotorSpeeds(0, 0);
+		floatMotors();
 	}
 
 	/**
 	 * Sets the robot to follow the wall until its heading is within
-	 * WALL_FOLLOW_DEG degrees of the heading to the desired point (x, y).
-	 * Positions are given in cm.
-	 * @param x The x coordinate of the destination in cm.
-	 * @param y The y coordinate of the destination in cm.
+	 * WALL_FOLLOW_DEG degrees of the heading to the destination.
+	 * @param destination
 	 */
-	private void wallFollow(double x, double y) {
+	private void wallFollow(Point destination) {
 		dc.setWallFollowing(true);
 		//Turns 90 degrees clockwise to prepare to wall follow.
 		turnAngle(-90);
@@ -388,7 +285,8 @@ public class Navigation {
 			double angle = xyt[2];
 			double currentX = xyt[0];
 			double currentY = xyt[1];
-			double minAng = Math.toDegrees(Math.atan2(y - currentY, x - currentX));
+			double minAng = Math.toDegrees(Math.atan2(destination.y - currentY, 
+					destination.x - currentX));
 			
 			//If the robot is heading roughly in the right way,
 			//stop wall following and head to destination.
@@ -544,6 +442,16 @@ public class Navigation {
 			HWConstants.RIGHT_MOTOR.forward();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 	}
+	
+	/**
+	 * Floats both motors.
+	 */
+	private void floatMotors() {
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		HWConstants.LEFT_MOTOR.flt();
+		HWConstants.RIGHT_MOTOR.flt();
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+	}
 
 	/**
 	 * Calculates the required angle that a wheel needs to turn
@@ -554,9 +462,62 @@ public class Navigation {
 	 * @return The angle by which the wheel should turn in degrees.
 	 */
 	private int convertAngle(double radius, double angle) {
-		if (angle > 0)
+		if (angle >= 0)
 			return (int) (HWConstants.CC_WIDTH * angle / (2 * radius));
 		else
 			return (int) (HWConstants.C_WIDTH * angle / (2 * radius));
+	}
+	
+	/**
+	 * Turns the robot left 90 degrees by pivoting on the left wheel.
+	 */
+	public void turnLeft() {
+		lock();
+		HWConstants.RIGHT_MOTOR.setSpeed(TURN_SPD);
+		HWConstants.LEFT_MOTOR.stop();
+		double angle = Math.toDegrees(HWConstants.L_WIDTH * Math.PI / 
+				(2 * HWConstants.RIGHT_RADIUS));
+		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * (int)angle);
+		unlock();
+	}
+	
+	/**
+	 * Turns the robot right 90 degrees by pivoting on the right wheel.
+	 */
+	public void turnRight() {
+		lock();
+		HWConstants.LEFT_MOTOR.setSpeed(TURN_SPD);
+		HWConstants.RIGHT_MOTOR.stop();
+		double angle = Math.toDegrees(HWConstants.R_WIDTH * Math.PI / 
+				(2 * HWConstants.LEFT_RADIUS));
+		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * (int)angle);
+		unlock();
+	}
+	
+	/**
+	 * Locks the navigation while it performs a task.
+	 */
+	private void lock() {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+	}
+	
+	/**
+	 * Unlocks the navigation after it performs a task.
+	 */
+	private void unlock() {
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
 	}
 }

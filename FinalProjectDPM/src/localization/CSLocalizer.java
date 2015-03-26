@@ -1,4 +1,5 @@
 package localization;
+import util.Point;
 import util.Util;
 import data.DataCenter;
 import drivers.HWConstants;
@@ -7,11 +8,6 @@ import interfaces.CSListener;
 
 /**
  * Class to perform localization using the color sensor.
- * TODO: Correct algorithm to account for CS not being 
- * exactly aligned with the robot.
- * TODO: Account for the width of the lines in the algorithm.
- * TODO: Fix bug where robot turns 90 degrees off. Place the robot
- * on all sides of the grid and have it localize to find the bug.
  * 
  * @author Andrei Purcarus
  *
@@ -22,6 +18,12 @@ public class CSLocalizer implements CSListener {
 	 * other processes to update.
 	 */
 	private static final long TIMEOUT = 100;
+	
+	/**
+	 * The angle in degrees by which to correct the final angle of the localization.
+	 */
+	private static final double CORRECTION_FACTOR = -1.6;
+	
 	/**
 	 * The number of grid lines to detect during localization.
 	 */
@@ -76,19 +78,18 @@ public class CSLocalizer implements CSListener {
 	 * must be running using the same DataCenter as this object.
 	 */
 	public void doLocalization() {
-		doLocalization(0, 0);
+		doLocalization(new Point(0, 0));
 	}
 
 	/**
 	 * Performs color sensor localization around (xGrid, yGrid). Robot must be facing
 	 * roughly 45 degrees counterclockwise from the +x axis. A CSPoller
-	 * must be running using the same DataCenter as this object. Takes (xGrid, yGrid)
+	 * must be running using the same DataCenter as this object. Takes grid
 	 * as being the grid line intersection that it is supposed to detect.
 	 * The distances are in cm.
-	 * @param xGrid The x position of the nearest grid line intersection in cm.
-	 * @param yGrid The y position of the nearest grid line intersection in cm.
+	 * @param grid The position of the grid line to localize against.
 	 */
-	public void doLocalization(double xGrid, double yGrid) {
+	public void doLocalization(Point grid) {
 		//Rotates 360 degrees until it clocks NUM_LINES grid lines in one complete
 		//rotation. The localization assumes it starts roughly facing 45 
 		//degrees counterclockwise from the +x axis. Therefore it should 
@@ -107,21 +108,17 @@ public class CSLocalizer implements CSListener {
 			if (numberOfTries > MAX_TRIES) {
 				//Gives up if it tries to localize too many times.
 				dc.removeListener(this);
-				count = 0;
 				return;
 			}
 		}
 		dc.removeListener(this);
 		count = 0;
-		//Averages the last data point with the last temporary.
-		data[3][0] = (data[3][0] + temp[0]) / 2;
-		data[3][1] = (data[3][1] + temp[1]) / 2;
-		data[3][2] = (data[3][2] + temp[2]) / 2;
 		
 		//Computes the difference between the x and y angles measured.
 		//Makes the difference be in the (-180, 180] range.
-		double thetaXDiff = data[0][2] - data[2][2];
-		double thetaYDiff = data[1][2] - data[3][2];
+		double[] diffs = getXAndYDiff(data[0][2], data[1][2], data[2][2], data[3][2]);
+		double thetaXDiff = diffs[0];
+		double thetaYDiff = diffs[1];
 		thetaXDiff = Util.toRange(thetaXDiff, -180.0, true);
 		thetaYDiff = Util.toRange(thetaYDiff, -180.0, true);
 		
@@ -148,28 +145,27 @@ public class CSLocalizer implements CSListener {
 		double[] changes = new double[NUM_LINES];
 		for (int i = 0; i < NUM_LINES; ++i) {
 			changes[i] = actual[i] - data[i][2];
-			changes[i] = Util.toRange(changes[i], 0.0, false);
+			changes[i] = Util.toRange(changes[i], -180.0, true);
 		}
 		double sum = 0;
 		for (double error : changes)
 			sum += error;
 		double averageError = sum / NUM_LINES;
-		
-		//Computes the current position x, y in cm.
+				
 		double x, y;
 		if (thetaYDiff >= 0.0)
-			x = xGrid - HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaYDiff)/2);
+			x = grid.x - HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaYDiff)/2);
 		else
-			x = xGrid + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaYDiff)/2);
+			x = grid.x + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaYDiff)/2);
 		if (thetaXDiff >= 0.0)
-			y = yGrid - HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
+			y = grid.y - HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
 		else
-			y = yGrid + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
+			y = grid.y + HWConstants.CS_DISTANCE * Math.cos(Math.toRadians(thetaXDiff)/2);
 		
 		//Gets current distance.
 		double[] dist = dc.getXYT();
 		//Corrects the position.
-		double actualAngle = dist[2] + averageError;
+		double actualAngle = dist[2] + averageError + CORRECTION_FACTOR;
 		actualAngle = Util.toRange(actualAngle, 0.0, false);
 		dc.setXYT(x, y, actualAngle);
 		try {
@@ -178,11 +174,6 @@ public class CSLocalizer implements CSListener {
 			e.printStackTrace();
 		}
 	}
-
-	/**
-	 * Temporary variable used to compute the center of the bandwidth.
-	 */
-	private double[] temp = null;
 	
 	/**
 	 * The method to be called to notify the
@@ -193,12 +184,6 @@ public class CSLocalizer implements CSListener {
 	public void ping() {
 		long currentPing = System.currentTimeMillis();
 		if (currentPing - lastPing > DELAY) {
-			//Averages the last temporary with the last data.
-			if (temp != null) {
-				data[count - 1][0] = (data[count - 1][0] + temp[0]) / 2;
-				data[count - 1][1] = (data[count - 1][1] + temp[1]) / 2;
-				data[count - 1][2] = (data[count - 1][2] + temp[2]) / 2;
-			}
 			if (count < NUM_LINES) {
 				data[count] = dc.getXYT();
 				++count;
@@ -206,8 +191,56 @@ public class CSLocalizer implements CSListener {
 				count = NUM_LINES + 1;
 			}
 			lastPing = currentPing;
-		} else {
-			temp = dc.getXYT();
 		}
+	}
+	
+	/**
+	 * Tests all possible combinations for the given angles and finds the best one
+	 * to localize with. The angles x1, y1, x2, y2 are the headings of the robot
+	 * as it turns 360 degrees and detects lines.
+	 * @return the difference in x angles (x1-x2) in position 0 and the difference in
+	 * 		   y angles (y1-y2) in position 1 of the array.
+	 */
+	private double[] getXAndYDiff(double x1, double y1, double x2, double y2) {
+		for (int j = 0; j < 4; ++j) {
+			double thetaXDiff = Math.signum(1.5 - j) * (x1 - x2);
+			double thetaYDiff = Math.signum(0.5 - (j % 2)) * (y1 - y2);
+			
+			double[] actual = new double[NUM_LINES];
+			if (thetaXDiff >= 0) {
+				actual[0] = 270.0 + thetaXDiff / 2;
+				actual[2] = 270.0 - thetaXDiff / 2;
+			} else {
+				actual[0] = 90.0 + thetaXDiff / 2;
+				actual[2] = 90.0 - thetaXDiff / 2;
+			}
+			if (thetaYDiff >= 0) {
+				actual[1] = 180.0 + thetaYDiff / 2;
+				actual[3] = 180.0 - thetaYDiff / 2;
+			} else {
+				actual[1] = thetaYDiff / 2;
+				actual[3] = -thetaYDiff / 2;
+			}
+			for (int i = 0; i < NUM_LINES; ++i) {
+				actual[i] = Util.toRange(actual[i], 0.0, false);
+			}
+			double[] changes = new double[NUM_LINES];
+			for (int i = 0; i < NUM_LINES; ++i) {
+				changes[i] = actual[i] - data[i][2];
+				changes[i] = Util.toRange(changes[i], -180.0, true);
+			}
+			double sum = 0;
+			for (double error : changes)
+				sum += error;
+			double averageError = sum / NUM_LINES;
+			if (averageError >= 315 || averageError <= 45) {
+				double[] result = new double[2];
+				result[0] = thetaXDiff;
+				result[1] = thetaYDiff;
+				return result;
+			}
+		}
+		double[] result = {(x1-x2), (y1-y2)};
+		return result;
 	}
 }

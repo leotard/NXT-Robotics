@@ -79,7 +79,7 @@ public class Odometer extends Thread {
 			//Difference in direction angle of the robot in radians.
 			double diff = rightDistance - leftDistance;
 			double thetaChange = 0;
-			if (diff > 0)
+			if (diff >= 0)
 				thetaChange = Math.toDegrees(diff / HWConstants.CC_WIDTH);
 			else
 				thetaChange = Math.toDegrees(diff / HWConstants.C_WIDTH);
