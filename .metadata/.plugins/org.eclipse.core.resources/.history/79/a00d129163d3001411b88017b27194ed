@@ -526,27 +526,13 @@ public class Navigation {
 	 */
 	private static final long TUNNEL_DELAY = 100;
 	
-	/**
-	 * Experimental class to use when traveling in a vertical tunnel
-	 * 1 tile wide.
-	 * @param destination
-	 * @param positive Are you traveling in the +y direction?
-	 */
-	public void travelInTunnelVertical(Point destination, boolean positive) {
+	public void travelInTunnelVertical(Point destination) {
 		lock();
 		dc.setWallFollowing(true);
 		//Gets the current x and y position in cm.
 		double[] xyt = dc.getXYT();
 		double currentX = xyt[0];
 		double currentY = xyt[1];
-		
-		//Calculates the minimal absolute angle to the destination 
-		//and turns in that direction.
-		double minAng;
-		minAng = Math.toDegrees(Math.atan2(destination.y - currentY, destination.x - currentX));
-		//Sets the angle in the range [0, 360).
-		minAng = Util.toRange(minAng, 0.0, false);
-		this.turnToAngle(minAng);
 		
 		try {
 			Thread.sleep(5 * USPoller.PING_DELAY);
@@ -557,13 +543,20 @@ public class Navigation {
 		//Gets current distances to wall.
 		double previousLeft = dc.getFilteredDistance(180) + HWConstants.LEFT_US_DISTANCE;
 		double previousRight = dc.getFilteredDistance(0) + HWConstants.RIGHT_US_DISTANCE;
+		double previousY = currentY;
+		
+		//Calculates the minimal absolute angle to the destination 
+		//and turns in that direction.
+		double minAng;
+		minAng = Math.toDegrees(Math.atan2(destination.y - currentY, destination.x - currentX));
+		//Sets the angle in the range [0, 360).
+		minAng = Util.toRange(minAng, 0.0, false);
+		this.turnToAngle(minAng);
 		
 		//Updates current position in cm.
 		xyt = dc.getXYT();
 		currentX = xyt[0];
 		currentY = xyt[1];
-		
-		double previousY = currentY;
 		
 		//Loops while the robot is not at its destination.
 		while (Math.abs(destination.x - currentX) > CM_ERR || Math.abs(destination.y - currentY) > CM_ERR) {
@@ -593,16 +586,8 @@ public class Navigation {
 				start = end;
 				double left = dc.getFilteredDistance(180) + HWConstants.LEFT_US_DISTANCE;
 				double right = dc.getFilteredDistance(0) + HWConstants.RIGHT_US_DISTANCE;
-				double avgXDisplacement = 0;
-				double avgX = 0;
-				currentY = dc.getY();
-				if (positive) {
-					avgXDisplacement = ((previousRight - right) + (left - previousLeft)) / 2;
-					avgX = destination.x + (left - right) / 2;
-				} else {
-					avgXDisplacement = ((right - previousRight) + (previousLeft - left)) / 2;
-					avgX = destination.x + (right - left) / 2;
-				}
+				double avgXDisplacement = ((previousRight - right) + (left - previousLeft)) / 2;
+				double avgX = destination.x + (left - right) / 2;
 				double correctAngle = Math.toDegrees(Math.atan2(currentY - previousY, avgXDisplacement));
 				dc.setXYT(avgX, currentY, correctAngle);
 				previousLeft = left;
@@ -610,96 +595,7 @@ public class Navigation {
 				previousY = currentY;
 			}
 		}
-		dc.setWallFollowing(false);
-		floatMotors();
-		unlock();
-	}
-	
-	/**
-	 * Experimental class to use when traveling in a horizontal tunnel
-	 * 1 tile wide.
-	 * @param destination
-	 * @param positive Are you traveling in the +x direction?
-	 */
-	public void travelInTunnelHorizontal(Point destination, boolean positive) {
-		lock();
-		dc.setWallFollowing(true);
-		//Gets the current x and y position in cm.
-		double[] xyt = dc.getXYT();
-		double currentX = xyt[0];
-		double currentY = xyt[1];
 		
-		//Calculates the minimal absolute angle to the destination 
-		//and turns in that direction.
-		double minAng;
-		minAng = Math.toDegrees(Math.atan2(destination.y - currentY, destination.x - currentX));
-		//Sets the angle in the range [0, 360).
-		minAng = Util.toRange(minAng, 0.0, false);
-		this.turnToAngle(minAng);
-		
-		try {
-			Thread.sleep(5 * USPoller.PING_DELAY);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		long start = System.currentTimeMillis();
-		//Gets current distances to wall.
-		double previousLeft = dc.getFilteredDistance(180) + HWConstants.LEFT_US_DISTANCE;
-		double previousRight = dc.getFilteredDistance(0) + HWConstants.RIGHT_US_DISTANCE;
-		
-		//Updates current position in cm.
-		xyt = dc.getXYT();
-		currentX = xyt[0];
-		currentY = xyt[1];
-		
-		double previousX = currentX;
-		
-		//Loops while the robot is not at its destination.
-		while (Math.abs(destination.x - currentX) > CM_ERR || Math.abs(destination.y - currentY) > CM_ERR) {
-			double dist = (destination.x - currentX)*(destination.x - currentX) + 
-					(destination.y - currentY)*(destination.y - currentY);
-			if (dist > HWConstants.TILE_DISTANCE)
-				dist = HWConstants.TILE_DISTANCE;
-			double speed = LOW_SPD + dist / (HWConstants.TILE_DISTANCE) * (HIGH_SPD - LOW_SPD);
-			setMotorSpeeds((int)speed, (int)speed);
-
-			//Updates current position in cm.
-			xyt = dc.getXYT();
-			currentX = xyt[0];
-			currentY = xyt[1];
-			
-			//Calculates the minimal absolute angle to the destination 
-			//and turns in that direction if the angle is off.
-			minAng = Math.toDegrees(Math.atan2(destination.y - currentY, destination.x - currentX));
-			//Sets the angle in the range [0, 360).
-			minAng = Util.toRange(minAng, 0.0, false);
-			if (Math.abs(xyt[2] - minAng) > DEG_ERR && 
-					Math.abs(xyt[2] - minAng) < 360 - DEG_ERR)
-				this.turnToAngle(minAng);
-			
-			long end = System.currentTimeMillis();
-			if (end - start > TUNNEL_DELAY) {
-				start = end;
-				double left = dc.getFilteredDistance(180) + HWConstants.LEFT_US_DISTANCE;
-				double right = dc.getFilteredDistance(0) + HWConstants.RIGHT_US_DISTANCE;
-				double avgYDisplacement = 0;
-				double avgY = 0;
-				currentX = dc.getX();
-				if (positive) {
-					avgYDisplacement = ((right - previousRight) + (previousLeft - left)) / 2;
-					avgY = destination.y + (right - left) / 2;
-				} else {
-					avgYDisplacement = ((previousRight - right) + (left - previousLeft)) / 2;
-					avgY = destination.y + (left - right) / 2;
-				}
-				double correctAngle = Math.toDegrees(Math.atan2(avgYDisplacement, currentX - previousX));
-				dc.setXYT(currentX, avgY, correctAngle);
-				previousLeft = left;
-				previousRight = right;
-				previousX = currentX;
-			}
-		}
-		dc.setWallFollowing(false);
 		floatMotors();
 		unlock();
 	}

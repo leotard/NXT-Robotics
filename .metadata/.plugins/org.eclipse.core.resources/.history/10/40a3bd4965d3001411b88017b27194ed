@@ -527,10 +527,10 @@ public class Navigation {
 	private static final long TUNNEL_DELAY = 100;
 	
 	/**
-	 * Experimental class to use when traveling in a vertical tunnel
+	 * Experimental class to use when travelling in a vertical tunnel
 	 * 1 tile wide.
 	 * @param destination
-	 * @param positive Are you traveling in the +y direction?
+	 * @param positive Are you travelling in the +y direction?
 	 */
 	public void travelInTunnelVertical(Point destination, boolean positive) {
 		lock();
@@ -615,12 +615,6 @@ public class Navigation {
 		unlock();
 	}
 	
-	/**
-	 * Experimental class to use when traveling in a horizontal tunnel
-	 * 1 tile wide.
-	 * @param destination
-	 * @param positive Are you traveling in the +x direction?
-	 */
 	public void travelInTunnelHorizontal(Point destination, boolean positive) {
 		lock();
 		dc.setWallFollowing(true);
