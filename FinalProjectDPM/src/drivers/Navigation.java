@@ -86,7 +86,6 @@ public class Navigation {
 	 */
 	public void travel(Point[] path, boolean obstacles) {
 		lock();
-		//Travels through the path.
 		for (Point p : path) {
 			travelToPoint(p, obstacles);
 		}
@@ -101,7 +100,6 @@ public class Navigation {
 	 */
 	public void travelTo(Point destination, boolean obstacles) {
 		lock();
-		//Travels to point.
 		travelToPoint(destination, obstacles);
 		unlock();
 	}
@@ -115,7 +113,6 @@ public class Navigation {
 	public void moveForward(double distance, boolean obstacles) {
 		lock();
 		double[] xyt = dc.getXYT();
-		//Travels to point.
 		Point destination = new Point(xyt[0] + distance * Math.cos(Math.toRadians(xyt[2])),
 				xyt[1] + distance * Math.sin(Math.toRadians(xyt[2])));
 		travelToPoint(destination, obstacles);
@@ -129,7 +126,6 @@ public class Navigation {
 	 */
 	public void turnTo(double angle) {
 		lock();
-		//Turns to specified angle.
 		turnToAngle(angle);
 		unlock();
 	}
@@ -144,7 +140,6 @@ public class Navigation {
 	 */
 	public void turnTo(double angle, int speed) {
 		lock();
-		//Turns to specified angle.
 		turnToAngle(angle, speed);
 		unlock();
 	}
@@ -156,7 +151,6 @@ public class Navigation {
 	 */
 	public void turn(double angle) {
 		lock();
-		//Turns by the specified angle counterclockwise.
 		turnAngle(angle);
 		unlock();
 	}
@@ -171,7 +165,6 @@ public class Navigation {
 	 */
 	public void turn(double angle, int speed) {
 		lock();
-		//Turns by the specified angle counterclockwise.
 		turnAngle(angle, speed);
 		unlock();
 	}
@@ -184,7 +177,6 @@ public class Navigation {
 	 */
 	public void setSpeeds(int lSpd, int rSpd) {
 		lock();
-		//Sets the motor speeds.
 		setMotorSpeeds(lSpd, rSpd);
 		unlock();
 	}
@@ -346,8 +338,6 @@ public class Navigation {
 				HWConstants.LEFT_RADIUS, error), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
 				HWConstants.RIGHT_RADIUS, error), false);
-		HWConstants.LEFT_MOTOR.stop();
-		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 	}
 	
@@ -374,8 +364,6 @@ public class Navigation {
 				HWConstants.LEFT_RADIUS, error), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
 				HWConstants.RIGHT_RADIUS, error), false);
-		HWConstants.LEFT_MOTOR.stop();
-		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 	}
 	
@@ -393,8 +381,6 @@ public class Navigation {
 				HWConstants.LEFT_RADIUS, angle), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
 				HWConstants.RIGHT_RADIUS, angle), false);
-		HWConstants.LEFT_MOTOR.stop();
-		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 	}
 	
@@ -415,8 +401,6 @@ public class Navigation {
 				HWConstants.LEFT_RADIUS, angle), true);
 		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
 				HWConstants.RIGHT_RADIUS, angle), false);
-		HWConstants.LEFT_MOTOR.stop();
-		HWConstants.RIGHT_MOTOR.stop();
 		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
 	}
 	
