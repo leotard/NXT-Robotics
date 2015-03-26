@@ -1,0 +1,562 @@
+package drivers;
+import data.DataCenter;
+import util.Point;
+import util.Util;
+
+/**
+ * A class that uses data from the odometer and ultrasonic
+ * sensors to control the motors of the robot and navigate
+ * a certain path. Also provides access to the robot's motors
+ * for manual control.
+ * 
+ * @author Andrei Purcarus
+ *
+ */
+public class Navigation {
+	/**
+	 * The lowest speed used by the robot's motors for navigation in deg/s.
+	 */
+	private static final int LOW_SPD = 200;
+	/**
+	 * The intermediate speed used by the robot's motors for navigation in deg/s.
+	 */
+	private static final int MID_SPD = 300;
+	/**
+	 * The highest speed used by the robot's motors for navigation in deg/s.
+	 */
+	private static final int HIGH_SPD = 400;
+	/**
+	 * The default speed used by the right motor while rotating in place.
+	 * The left motor speed is scaled accordingly.
+	 */
+	private static final int TURN_SPD = 120;
+	/**
+	 * The acceleration used by the robot's motors in deg/s/s.
+	 */
+	private static final int ACCELERATION = 1000;
+
+	/**
+	 * The maximum error in x or y when traveling to a point, in cm.
+	 */
+	private final double CM_ERR = 1.0;
+	/**
+	 * The maximum error in angle when traveling to a point, in degrees.
+	 */
+	private final double DEG_ERR = 2.0;
+	/**
+	 * When the robot's heading is within this, in degrees, of the heading 
+	 * towards destination, stops wall following.
+	 */
+	private final double WALL_FOLLOW_DEG_ERR = 15.0;
+
+	/**
+	 * The minimum distance in cm from a frontal obstacle to keep the robot at.
+	 */
+	private final int MIN_FRONT_DISTANCE = 20;
+	/**
+	 * The minimum distance in cm from a side obstacle to keep the robot at.
+	 */
+	private final int MIN_SIDE_DISTANCE = 10;
+	
+	/**
+	 * The location where the navigator can get data.
+	 */
+	private DataCenter dc;
+	
+	/**
+	 * Variable keeping track of if the navigator is running.
+	 */
+	private boolean navigating;
+	
+	/**
+	 * Default constructor.
+	 * @param dc The data storage location to get data from.
+	 */
+	public Navigation(DataCenter dc) {
+		this.dc = dc;
+		HWConstants.LEFT_MOTOR.setAcceleration(ACCELERATION);
+		HWConstants.RIGHT_MOTOR.setAcceleration(ACCELERATION);
+		this.navigating = false;
+	}
+	
+	/**
+	 * Makes the robot move to the points on the given path.
+	 * @param path The path to travel.
+	 */
+	public void travel(Point[] path) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		//Travels through the path.
+		for (Point p : path) {
+			travelToPoint(p.x, p.y, true);
+		}
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+
+	/**
+	 * Synchronized public version of the travel to method for
+	 * calls from other threads. Takes the robot to position (x, y).
+	 * The positions are in cm.
+	 * @param x The destination x coordinate in cm.
+	 * @param y The destination y coordinate in cm.
+	 * @param obstacles Should the navigator check for obstacles?
+	 */
+	public void travelTo(double x, double y, boolean obstacles) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		//Travels to point.
+		travelToPoint(x, y, obstacles);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Moves the robot forward a specified distance.
+	 * @param distance The distance to move forward by. Negative
+	 * 				   distances mean moving backwards.
+	 * @param obstacles Should the navigator check for obstacles?
+	 */
+	public void moveForward(double distance, boolean obstacles) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		double[] xyt = dc.getXYT();
+		//Travels to point.
+		travelToPoint(xyt[0] + distance * Math.cos(Math.toRadians(xyt[2])),
+				xyt[1] + distance * Math.sin(Math.toRadians(xyt[2])), 
+				obstacles);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Synchronized public version of the turn to method for calls from 
+	 * other threads. Turns the robot a minimal angle to the given angle heading in degrees.
+	 * @param angle The final heading of the robot in degrees.
+	 */
+	public void turnTo(double angle) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		//Turns to specified angle.
+		turnToAngle(angle);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Synchronized public version of the turn to method for calls from 
+	 * other threads. Turns the robot a minimal angle to the given angle heading in degrees,
+	 * with the motors running at the desired speed.
+	 * @param angle The final heading of the robot in degrees.
+	 * @param speed The speed to use for the right motor in deg/s. The left
+	 * 				motor's speed is scaled appropriately.
+	 */
+	public void turnTo(double angle, int speed) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		//Turns to specified angle.
+		turnToAngle(angle, speed);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Synchronized public version of the turn method for calls from 
+	 * other threads. Turns the robot a specified angle in degrees counterclockwise.
+	 * @param angle The angle to turn by in degrees.
+	 */
+	public void turn(double angle) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		//Turns by the specified angle counterclockwise.
+		turnAngle(angle);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Synchronized public version of the turn method for calls from 
+	 * other threads. Turns the robot a specified angle in degrees counterclockwise,
+	 * with the motors running at the desired speed.
+	 * @param angle The angle to turn by in degrees.
+	 * @param speed The speed to use for the right motor in deg/s. The left
+	 * 				motor's speed is scaled appropriately.
+	 */
+	public void turn(double angle, int speed) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		//Turns by the specified angle counterclockwise.
+		turnAngle(angle, speed);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Synchronized public version of the set speeds method for
+	 * calls from other threads. Sets the motor speeds as an atomic operation.
+	 * @param lSpd The speed of the left motor to set in deg/s.
+	 * @param rSpd The speed of the right motor to set in deg/s.
+	 */
+	public void setSpeeds(int lSpd, int rSpd) {
+		//Waits until the robot is not navigating to start.
+		boolean navigating = true;
+		while (navigating) {
+			synchronized (this) {
+				navigating = this.navigating;
+			}
+		}
+		//Sets the robot to navigating.
+		synchronized (this) {
+			this.navigating = true;
+		}
+		//Sets the motor speeds.
+		setMotorSpeeds(lSpd, rSpd);
+		//Sets the robot to not navigating.
+		synchronized (this) {
+			this.navigating = false;
+		}
+	}
+	
+	/**
+	 * Returns true if the Navigator is running, and false otherwise.
+	 * @return true if the Navigator is running, and false otherwise.
+	 */
+	public boolean isNavigating() {
+		synchronized (this) {
+			return navigating;
+		}
+	}
+	
+	/**
+	 * Takes the robot to position (x, y), where x and y are in cm.
+	 * @param x The destination x coordinate in cm.
+	 * @param y The destination y coordinate in cm.
+	 * @param obstacles Should the navigator check for obstacles? 
+	 */
+	private void travelToPoint(double x, double y, boolean obstacles) {
+		//Gets the current x and y position in cm.
+		double[] xyt = dc.getXYT();
+		double currentX = xyt[0];
+		double currentY = xyt[1];
+		
+		//Calculates the minimal absolute angle to the destination 
+		//and turns in that direction.
+		double minAng;
+		minAng = Math.toDegrees(Math.atan2(y - currentY, x - currentX));
+		//Sets the angle in the range [0, 360).
+		minAng = Util.toRange(minAng, 0.0, false);
+		this.turnToAngle(minAng);
+		
+		//Updates current position in cm.
+		xyt = dc.getXYT();
+		currentX = xyt[0];
+		currentY = xyt[1];
+		
+		//Gets the distance to any frontal obstacles.
+		int usData = 0;
+		if (obstacles)
+			usData = dc.getFilteredDistance(90);
+		
+		//Loops while the robot is not at its destination.
+		while (Math.abs(x - currentX) > CM_ERR || Math.abs(y - currentY) > CM_ERR) {
+			setMotorSpeeds(MID_SPD, MID_SPD);
+			
+			//If too close to the front of the wall, follow the wall.
+			if (obstacles && usData < MIN_FRONT_DISTANCE) {
+				wallFollow(x, y);
+			}
+
+			//Updates current position in cm.
+			xyt = dc.getXYT();
+			currentX = xyt[0];
+			currentY = xyt[1];
+			
+			//Calculates the minimal absolute angle to the destination 
+			//and turns in that direction if the angle is off.
+			minAng = Math.toDegrees(Math.atan2(y - currentY, x - currentX));
+			//Sets the angle in the range [0, 360).
+			minAng = Util.toRange(minAng, 0.0, false);
+			if (Math.abs(xyt[2] - minAng) > DEG_ERR && 
+					Math.abs(xyt[2] - minAng) < 360 - DEG_ERR)
+				this.turnToAngle(minAng);
+			
+			//Get the distance to any frontal obstacle.
+			usData = 0;
+			if (obstacles)
+				usData = dc.getFilteredDistance(90);
+		}
+		
+		setMotorSpeeds(0, 0);
+	}
+
+	/**
+	 * Sets the robot to follow the wall until its heading is within
+	 * WALL_FOLLOW_DEG degrees of the heading to the desired point (x, y).
+	 * Positions are given in cm.
+	 * @param x The x coordinate of the destination in cm.
+	 * @param y The y coordinate of the destination in cm.
+	 */
+	private void wallFollow(double x, double y) {
+		dc.setWallFollowing(true);
+		//Turns 90 degrees clockwise to prepare to wall follow.
+		turnAngle(-90);
+		
+		while (true) {
+			//Processes the distances from each sensor.
+			processUSData(dc.getFilteredDistance(180), dc.getFilteredDistance(90));
+
+			//Calculate the angle difference between the current angle
+			//and the angle required to reach the destination.
+			double[] xyt = dc.getXYT();
+			double angle = xyt[2];
+			double currentX = xyt[0];
+			double currentY = xyt[1];
+			double minAng = Math.toDegrees(Math.atan2(y - currentY, x - currentX));
+			
+			//If the robot is heading roughly in the right way,
+			//stop wall following and head to destination.
+			if (Math.abs(angle - minAng) < WALL_FOLLOW_DEG_ERR || 
+					Math.abs(angle - minAng) > 360 - WALL_FOLLOW_DEG_ERR) {
+				dc.setWallFollowing(false);
+				this.turnToAngle(minAng);
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Processes the distances from the robot to the wall and controls the
+	 * robots motion using a p-type controller.
+	 * @param leftDistance The distance to the wall on the left (180 degrees) in cm.
+	 * @param frontDistance The distance to the wall on the front (90 degrees) in cm.
+	 */
+	private void processUSData(int leftDistance, int frontDistance) {
+		if (frontDistance < MIN_FRONT_DISTANCE) {
+			//Turns 45 degrees clockwise.
+			turnAngle(-45);
+		} else {
+			//Sets errors that are too positive into 
+			//the range [-bandCenter, bandCenter]
+			//where p type control is applied.
+			int error = leftDistance - MIN_SIDE_DISTANCE;
+			if (error > MIN_SIDE_DISTANCE)
+				error = MIN_SIDE_DISTANCE;
+			if (error < 0) {
+				setMotorSpeeds(MID_SPD + (HIGH_SPD - MID_SPD) * -error / MIN_SIDE_DISTANCE, 
+						MID_SPD + (LOW_SPD - MID_SPD) * -error / MIN_SIDE_DISTANCE);
+			} else {
+				setMotorSpeeds(MID_SPD + (LOW_SPD - MID_SPD) * error / MIN_SIDE_DISTANCE,
+						MID_SPD + (HIGH_SPD - MID_SPD) * error / MIN_SIDE_DISTANCE);
+			}
+		}
+	}
+	
+	/**
+	 * Turns the robot a minimal angle to the given angle heading in degrees.
+	 * @param angle The final heading of the robot in degrees.
+	 */
+	private void turnToAngle(double angle) {
+		//Gets the difference between the two angles in degrees.
+		double error = angle - dc.getTheta();
+		
+		//Sets it to be a minimal angle in the range (-180, 180].
+		error = Util.toRange(error, -180.0, true);
+
+		//Executes the instructions as an atomic operation.
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		HWConstants.LEFT_MOTOR.setSpeed((int)(
+				TURN_SPD * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
+		HWConstants.RIGHT_MOTOR.setSpeed(TURN_SPD);
+		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
+				HWConstants.LEFT_RADIUS, error), true);
+		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
+				HWConstants.RIGHT_RADIUS, error), false);
+		HWConstants.LEFT_MOTOR.stop();
+		HWConstants.RIGHT_MOTOR.stop();
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+	}
+	
+	/**
+	 * Turns the robot a minimal angle to the given angle heading in degrees, with 
+	 * the motors going at the desired speed.
+	 * @param angle The final heading of the robot in degrees.
+	 * @param speed The speed to use for the right motor in deg/s. The left
+	 * 				motor's speed is scaled appropriately.
+	 */
+	private void turnToAngle(double angle, int speed) {
+		//Gets the difference between the two angles in degrees.
+		double error = angle - dc.getTheta();
+		
+		//Sets it to be a minimal angle in the range (-180, 180].
+		error = Util.toRange(error, -180.0, true);
+
+		//Executes the instructions as an atomic operation.
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		HWConstants.LEFT_MOTOR.setSpeed((int)(
+				speed * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
+		HWConstants.RIGHT_MOTOR.setSpeed(speed);
+		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
+				HWConstants.LEFT_RADIUS, error), true);
+		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
+				HWConstants.RIGHT_RADIUS, error), false);
+		HWConstants.LEFT_MOTOR.stop();
+		HWConstants.RIGHT_MOTOR.stop();
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+	}
+	
+	/**
+	 * Turns the robot a specified angle in degrees counterclockwise.
+	 * @param angle The angle to turn by in degrees.
+	 */
+	private void turnAngle(double angle) {
+		//Executes the instructions as an atomic operation.
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		HWConstants.LEFT_MOTOR.setSpeed((int)(
+				TURN_SPD * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
+		HWConstants.RIGHT_MOTOR.setSpeed(TURN_SPD);
+		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
+				HWConstants.LEFT_RADIUS, angle), true);
+		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
+				HWConstants.RIGHT_RADIUS, angle), false);
+		HWConstants.LEFT_MOTOR.stop();
+		HWConstants.RIGHT_MOTOR.stop();
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+	}
+	
+	/**
+	 * Turns the robot a specified angle in degrees counterclockwise, with the
+	 * motors going at the desired speed.
+	 * @param angle The angle to turn by in degrees.
+	 * @param speed The speed to use for the right motor in deg/s. The left
+	 * 				motor's speed is scaled appropriately.
+	 */
+	private void turnAngle(double angle, int speed) {
+		//Executes the instructions as an atomic operation.
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+		HWConstants.LEFT_MOTOR.setSpeed((int)(
+				speed * HWConstants.RIGHT_RADIUS / HWConstants.LEFT_RADIUS));
+		HWConstants.RIGHT_MOTOR.setSpeed(speed);
+		HWConstants.LEFT_MOTOR.rotate(HWConstants.DIRECTION * -convertAngle(
+				HWConstants.LEFT_RADIUS, angle), true);
+		HWConstants.RIGHT_MOTOR.rotate(HWConstants.DIRECTION * convertAngle(
+				HWConstants.RIGHT_RADIUS, angle), false);
+		HWConstants.LEFT_MOTOR.stop();
+		HWConstants.RIGHT_MOTOR.stop();
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+	}
+	
+	/**
+	 * Sets the motor speeds as an atomic operation.
+	 * @param lSpd The speed of the left motor to set in deg/s.
+	 * @param rSpd The speed of the right motor to set in deg/s.
+	 */
+	private void setMotorSpeeds(int lSpd, int rSpd) {
+		//Sets max priority to execute instructions atomically.
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);	
+		HWConstants.LEFT_MOTOR.setSpeed((int)(
+			Math.abs(lSpd) * HWConstants.RIGHT_RADIUS / 
+				HWConstants.LEFT_RADIUS));
+		HWConstants.RIGHT_MOTOR.setSpeed(Math.abs(rSpd));
+		if (lSpd * HWConstants.DIRECTION < 0)
+			HWConstants.LEFT_MOTOR.backward();
+		else
+			HWConstants.LEFT_MOTOR.forward();
+		if (rSpd * HWConstants.DIRECTION < 0)
+			HWConstants.RIGHT_MOTOR.backward();
+		else
+			HWConstants.RIGHT_MOTOR.forward();
+		Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+	}
+
+	/**
+	 * Calculates the required angle that a wheel needs to turn
+	 * assuming both wheels are turning.
+	 * @param radius The radius of the wheel in cm.
+	 * @param angle The angle by which the robot should turn in degrees 
+	 * 				counterclockwise.
+	 * @return The angle by which the wheel should turn in degrees.
+	 */
+	private int convertAngle(double radius, double angle) {
+		if (angle > 0)
+			return (int) (HWConstants.CC_WIDTH * angle / (2 * radius));
+		else
+			return (int) (HWConstants.C_WIDTH * angle / (2 * radius));
+	}
+}

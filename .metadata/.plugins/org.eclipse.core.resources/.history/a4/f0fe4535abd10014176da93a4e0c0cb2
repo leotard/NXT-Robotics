@@ -1,0 +1,146 @@
+package main;
+import java.io.DataInputStream;
+import java.io.IOException;
+
+import comm.BluetoothComm;
+import launcher.Launcher;
+import odometer.Odometer;
+import odometer.OdometerCorrection;
+import data.DataCenter;
+import drivers.CSPoller;
+import drivers.HWConstants;
+import drivers.Navigation;
+import drivers.USPoller;
+import lejos.nxt.Button;
+import lejos.nxt.Sound;
+import localization.CSLocalizer;
+import localization.USLocalizer;
+
+/**
+ * The main class. Initializes the threads of execution
+ * and starts them. Also sends data to the computer and takes
+ * commands from it using bluetooth.
+ * 
+ * @author Andrei Purcarus
+ *
+ */
+public class BTMaster {
+	/*
+	 * The instructions the computer can send.
+	 * They arrive as follows:
+	 * MOVE_OBS_ON DOUBLE DOUBLE
+	 * MOVE_OBS_OFF DOUBLE DOUBLE
+	 * TURN DOUBLE
+	 * TURN_TO DOUBLE
+	 * LOCALIZE_US
+	 * LOCALIZE_CS
+	 * SHOOT
+	 * EXIT
+	 */
+	private static final byte MOVE_OBS_ON = 0x00;
+	private static final byte MOVE_OBS_OFF = 0x01;
+	private static final byte TURN = 0x02;
+	private static final byte TURN_TO = 0x03;
+	private static final byte LOCALIZE_US = 0x04;
+	private static final byte LOCALIZE_CS = 0x05;
+	private static final byte SHOOT = 0x06;
+	private static final byte EXIT = 0x07;
+	
+	/**
+	 * Main thread of execution of the robot. Starts all other threads.
+	 */
+	public static void main(String [] args) {
+		//Wait for a button to start.
+		int buttonChoice = Button.waitForAnyPress();
+		switch (buttonChoice) {
+		case Button.ID_ENTER: case Button.ID_LEFT: case Button.ID_RIGHT:
+			break;
+		case Button.ID_ESCAPE:
+			return;
+		default:
+			throw new RuntimeException("Impossible button press.");
+		}
+		
+		//Initializes the threads.
+		final DataCenter dc = new DataCenter();
+		final Odometer odo = new Odometer(dc);
+		final OdometerCorrection oc = new OdometerCorrection(dc);
+		final Navigation nav = new Navigation(dc);
+		final USPoller usLeft = new USPoller(180, dc);
+		final USPoller usFront = new USPoller(90, dc);
+		final CSPoller cs = new CSPoller(dc);
+		final USLocalizer usl = new USLocalizer(dc, nav);
+		final CSLocalizer ll = new CSLocalizer(dc, nav);
+		final BluetoothComm bt = new BluetoothComm((byte)(0xF), dc);
+		final Launcher launcher = new Launcher(HWConstants.LAUNCHER_MOTOR);
+
+		//Starts the threads.
+		odo.start();
+		usFront.start();
+		usLeft.start();
+		cs.start();
+		bt.start();
+
+		(new Thread() {
+			public void run() {
+				DataInputStream dis = bt.getInStream();
+				double x = 0, y = 0, angle = 0;
+				while (true) {
+					try {
+						byte command = dis.readByte();
+						switch (command) {
+						case MOVE_OBS_ON:
+							x = dis.readDouble();
+							y = dis.readDouble();
+							oc.start();
+							nav.travelTo(x, y, true);
+							oc.stop();
+							break;
+						case MOVE_OBS_OFF:						
+							x = dis.readDouble();
+							y = dis.readDouble();
+							oc.start();
+							nav.travelTo(0, 0, false);
+							oc.start();
+							break;
+						case TURN:
+							angle = dis.readDouble();
+							oc.start();
+							nav.turn(angle);
+							oc.stop();
+							break;
+						case TURN_TO:
+							angle = dis.readDouble();
+							oc.start();
+							nav.turnTo(angle);
+							oc.stop();
+							break;
+						case LOCALIZE_US:
+							usl.doLocalization();
+							break;
+						case LOCALIZE_CS:
+							nav.turnTo(45);
+							ll.doLocalization();
+							break;
+						case SHOOT:
+							launcher.fire();
+							break;
+						case EXIT:
+							
+							System.exit(0);
+						default:
+							throw new RuntimeException("Unavailable command");
+						}
+						bt.done();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+		
+		//Wait for another button press to exit.
+		Button.waitForAnyPress();
+		System.exit(0);
+	}
+}

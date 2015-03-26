@@ -1,2 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<qualifiedTypeNameHistroy/>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="java.lang.Math"/>
+<fullyQualifiedTypeName name="util.Util"/>
+<fullyQualifiedTypeName name="lejos.nxt.UltrasonicSensor"/>
+<fullyQualifiedTypeName name="lejos.nxt.SensorPort"/>
+</qualifiedTypeNameHistroy>

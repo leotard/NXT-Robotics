@@ -1,0 +1,186 @@
+package main;
+import launcher.Launcher;
+import odometer.Odometer;
+import odometer.OdometerCorrection;
+import data.DataCenter;
+import drivers.CSPoller;
+import drivers.HWConstants;
+import drivers.Navigation;
+import drivers.USPoller;
+import util.Point;
+import util.Util;
+import lejos.nxt.Button;
+import lejos.nxt.SensorPort;
+import lejos.nxt.Sound;
+import lejos.nxt.UltrasonicSensor;
+import localization.CSLocalizer;
+import localization.USLocalizer;
+
+/**
+ * The main class. Initializes the threads of execution
+ * and starts them.
+ * 
+ * @author Andrei Purcarus
+ * @author Leotard Niyonkuru
+ */
+public class Mapped {
+	/**
+	 * Time to wait during a pause in ms.
+	 */
+	private static final long TIMEOUT = 100;
+
+	/**
+	 * Main thread of execution of the robot. Starts all other threads.
+	 */
+	public static void main(String [] args) {
+		//Wait for a button to start.
+		int buttonChoice = Button.waitForAnyPress();
+		switch (buttonChoice) {
+		case Button.ID_ENTER: case Button.ID_LEFT: case Button.ID_RIGHT:
+			break;
+		case Button.ID_ESCAPE:
+			return;
+		default:
+			throw new RuntimeException("Impossible button press.");
+		}
+		
+		//The points on the map. _tx means turn x after getting there.
+		//r is right and l is left.
+		final Point p0 = new Point(convert(0), convert(0));
+		final Point p1 = new Point(convert(-0.5), convert(2.5));
+		final Point p2_tr = new Point(convert(-0.5), convert(5.1));
+		final Point p3_tl = new Point(convert(1.1), convert(5.5));
+		final Point p4_tr = new Point(convert(1.5), convert(6.1));
+		final Point p5 = new Point(convert(4.5), convert(6.5));
+		final Point p6_destination = new Point(convert(6), convert(6));
+		final Point p7 = new Point(convert(4.5), convert(6.5));
+		final Point p8_tl = new Point(convert(1.9), convert(6.5));
+		final Point p9_tr = new Point(convert(1.5), convert(5.9));
+		final Point p10_tl = new Point(convert(-0.1), convert(5.5));
+		final Point p11 = new Point(convert(-0.5), convert(2.5));
+		final Point p12 = new Point(convert(0), convert(0));
+
+		//The position of the target.
+		final Point target = new Point(convert(9), convert(9));
+		//The number of shots to fire at each target.
+		final int shots = 3;
+		
+		//Initializes the threads.
+		final DataCenter dc = new DataCenter();
+		final Odometer odo = new Odometer(dc);
+		final OdometerCorrection oc = new OdometerCorrection(dc);
+		final Navigation nav = new Navigation(dc);
+		final USPoller usFront = new USPoller(90, dc);
+		final CSPoller cs = new CSPoller(dc);
+		final USLocalizer usl = new USLocalizer(dc, nav);
+		final CSLocalizer ll = new CSLocalizer(dc, nav);
+		final Launcher launcher = new Launcher(HWConstants.LAUNCHER_MOTOR);
+
+		//Starts the threads.
+		odo.start();
+		usFront.start();
+		//usLeft.start();
+		cs.start();
+
+		(new Thread() {
+			public void run() {
+				usl.doLocalization();
+				//Travels to 0 for the light localization.
+				nav.travelTo(p0, false);
+				//Turns to 45 degrees for the light localization.
+				nav.turnTo(45);
+				ll.doLocalization();
+				//Indicates that the localization is finished.
+				Sound.twoBeeps();
+				//Gets to destination.
+				oc.start();
+				nav.travelTo(p1, false);
+				nav.travelTo(p2_tr, false);
+				nav.turnRight();
+				nav.travelTo(p3_tl, false);
+				nav.turnLeft();
+				nav.travelTo(p4_tr, false);
+				nav.turnRight();
+				nav.travelTo(p5, false);
+				nav.travelTo(p6_destination, false);
+				oc.stop();
+				//Turns to 45 degrees for the light localization.
+				nav.turnTo(45);
+				ll.doLocalization(p6_destination);
+				
+				turnToLaunch(convert(6), convert(6), convert(6), convert(2), nav);
+				//Tells the slave NXT to fire shots times.
+				launcher.fire(shots);
+				
+				//Turns to 45 degrees for the light localization.
+				nav.travelTo(convert(6), convert(6), false);
+				nav.turnTo(45);
+				ll.doLocalization(convert(6), convert(6));
+				//Pauses to allow other threads to update.
+				pause();
+				
+				//Returns to origin.
+				oc.start();
+				nav.travelTo(convert(4.5), convert(6.5), false);
+				nav.travelTo(convert(2), convert(6.5), false);
+				nav.travelTo(convert(1.65), convert(6.35), false);
+				nav.travelTo(convert(1.5), convert(6), false);
+				nav.travelTo(convert(1.35), convert(5.65), false);
+				nav.travelTo(convert(1), convert(5.5), false);
+				nav.travelTo(convert(0), convert(5.5), false);
+				nav.travelTo(convert(-0.35), convert(5.35), false);
+				nav.travelTo(convert(-0.5), convert(5), false);
+				nav.travelTo(convert(-0.5), convert(2.5), false);
+				nav.travelTo(convert(0), convert(0), false);
+				oc.stop();
+				usl.doLocalization();
+				//Turns to 45 degrees for the light localization.
+				nav.travelTo(convert(0), convert(0), false);
+				nav.turnTo(45);
+				ll.doLocalization();
+				//Pauses to allow other threads to update.
+				pause();
+				nav.travelTo(0, 0, false);
+				nav.turnTo(90.0);
+				
+				//Tells the slave to exit.
+				
+				System.exit(0);
+			}
+		}).start();
+		
+		//Wait for another button press to exit.
+		Button.waitForAnyPress();
+		System.exit(0);
+	}
+	
+	/**
+	 * Pauses the current thread for a period of TIMEOUT ms.
+	 */
+	private static void pause() {
+		try {
+			Thread.sleep(TIMEOUT);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static double convert(double x) {
+		return x * HWConstants.TILE_DISTANCE;
+	}
+	
+	/**
+	 * Positions itself to fire at the target using the navigation.
+	 * The reference point serves to narrow down the possibilities of 
+	 * where to go, and the robot will position itelf on the line joining 
+	 * target and reference.
+	 */
+	private static void turnToLaunch(Point reference, Point target, Navigation nav) {
+		double angle = Math.atan2(target.y - reference.y, target.x - reference.x);
+		double xx = HWConstants.LAUNCH_DISTANCE * Math.cos(angle);
+		double yy = HWConstants.LAUNCH_DISTANCE * Math.sin(angle);
+		Point launch_pos = new Point(target.x - xx, target.y - yy);
+		nav.travelTo(launch_pos, false);
+		nav.turnTo(Util.toRange(Math.toDegrees(angle) - HWConstants.LAUNCH_ANGLE, 0.0, false));
+	}
+}

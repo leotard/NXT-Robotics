@@ -1,0 +1,72 @@
+package main;
+import launcher.Launcher;
+import odometer.Odometer;
+import odometer.OdometerCorrection;
+import data.DataCenter;
+import drivers.CSPoller;
+import drivers.HWConstants;
+import drivers.Navigation;
+import drivers.USPoller;
+import util.Point;
+import lejos.nxt.Button;
+import lejos.nxt.Sound;
+import localization.CSLocalizer;
+import localization.USLocalizer;
+
+/**
+ * The main class. Initializes the threads of execution
+ * and starts them.
+ * 
+ * @author Andrei Purcarus
+ * @author Leotard Niyonkuru
+ */
+public class Elastic {
+	/**
+	 * Time to wait during a pause in ms.
+	 */
+	private static final long TIMEOUT = 100;
+
+	/**
+	 * Main thread of execution of the robot. Starts all other threads.
+	 */
+	public static void main(String [] args) {
+		//Wait for a button to start.
+		int buttonChoice = Button.waitForAnyPress();
+		switch (buttonChoice) {
+		case Button.ID_ENTER: case Button.ID_LEFT: case Button.ID_RIGHT:
+			break;
+		case Button.ID_ESCAPE:
+			return;
+		default:
+			throw new RuntimeException("Impossible button press.");
+		}
+
+		final Launcher launcher = new Launcher(HWConstants.LAUNCHER_MOTOR);
+		
+		(new Thread() {
+			public void run() {
+				launcher.fire(6);
+				System.exit(0);
+			}
+		}).start();
+		
+		//Wait for another button press to exit.
+		Button.waitForAnyPress();
+		System.exit(0);
+	}
+	
+	/**
+	 * Pauses the current thread for a period of TIMEOUT ms.
+	 */
+	private static void pause() {
+		try {
+			Thread.sleep(TIMEOUT);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static double convert(double x) {
+		return x * HWConstants.TILE_DISTANCE;
+	}
+}
