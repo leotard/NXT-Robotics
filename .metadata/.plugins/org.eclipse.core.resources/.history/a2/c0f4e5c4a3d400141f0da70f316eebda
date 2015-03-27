@@ -77,7 +77,7 @@ public class AlphaMapped {
 				 Point p5_alpha = new Point(convert(0.2), convert(5.5));
 				 Point p6 = new Point(convert(0.8), convert(5.5));
 				 Point p7_tl = new Point(convert(1.2), convert(5.5));
-				 Point p8_tr = new Point(convert(1.55), convert(6.2));
+				 Point p8_tr = new Point(convert(1.6), convert(6.2));
 				 Point p9_alpha = new Point(convert(2.2), convert(6.4));
 				 Point p10 = new Point(convert(2.8), convert(6.4));
 				 Point p11 = new Point(convert(4.5), convert(6.25));

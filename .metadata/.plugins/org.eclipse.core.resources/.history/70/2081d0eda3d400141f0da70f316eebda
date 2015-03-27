@@ -513,7 +513,7 @@ public class Navigation {
 	/**
 	 * Time in ms to wait between consecutive checks of the position during tunneling.
 	 */
-	private static final long TUNNEL_DELAY = 2000;
+	private static final long TUNNEL_DELAY = 3000;
 	
 	/**
 	 * Experimental class to use when traveling in a vertical tunnel

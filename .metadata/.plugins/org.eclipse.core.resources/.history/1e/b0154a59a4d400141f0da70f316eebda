@@ -17,12 +17,12 @@ public class CSLocalizer implements CSListener {
 	 * Number of ms to wait after finishing localization to allow
 	 * other processes to update.
 	 */
-	private static final long TIMEOUT = 500;
+	private static final long TIMEOUT = 100;
 	
 	/**
 	 * The angle in degrees by which to correct the final angle of the localization.
 	 */
-	private static final double CORRECTION_FACTOR = 1;
+	private static final double CORRECTION_FACTOR = 0;
 	
 	/**
 	 * The number of grid lines to detect during localization.
@@ -171,17 +171,17 @@ public class CSLocalizer implements CSListener {
 		
 		//TODO
 		nav.travelTo(grid, false);
-		nav.turnTo(80);
+		nav.turnTo(85);
 		while (dc.getCSValue() > 47) {
 			nav.turn(0.5);
 		}
 		double tmin = dc.getTheta();
-		while (dc.getCSValue() <= 47) {
+		while (dc.getCSValue() <= 46) {
 			nav.turn(0.5);
 		}
 		double tmax = dc.getTheta();
 		double tavg = (tmin + tmax) / 2;
-		dc.setTheta(tmax + (Util.toRange(90 + CORRECTION_FACTOR - tavg, -180, true)));
+		dc.setTheta(tmax + (Util.toRange(-90 - HWConstants.CS_ANGLE - tavg, -180, true));
 		//TODO
 		
 		try {

@@ -597,9 +597,9 @@ public class Navigation {
 					avgXDisplacement = ((right - previousRight) + (previousLeft - left)) / 2;
 					avgX = destination.x + (right - left) / 2;
 				}
-				//double correctAngle = Math.toDegrees(Math.atan2(currentY - previousY, avgXDisplacement));
-				//dc.setXYT(avgX, currentY, correctAngle);
-				dc.setX(avgX);
+				double correctAngle = Math.toDegrees(Math.atan2(currentY - previousY, avgXDisplacement));
+				dc.setXYT(avgX, currentY, correctAngle);
+				//dc.setX(avgX);
 				previousLeft = left;
 				previousRight = right;
 				previousY = currentY;
@@ -692,9 +692,9 @@ public class Navigation {
 					avgYDisplacement = ((previousRight - right) + (left - previousLeft)) / 2;
 					avgY = destination.y + (left - right) / 2;
 				}
-				//double correctAngle = Math.toDegrees(Math.atan2(avgYDisplacement, currentX - previousX));
-				//dc.setXYT(currentX, avgY, correctAngle);
-				dc.setY(avgY);
+				double correctAngle = Math.toDegrees(Math.atan2(avgYDisplacement, currentX - previousX));
+				dc.setXYT(currentX, avgY, correctAngle);
+				//dc.setY(avgY);
 				previousLeft = left;
 				previousRight = right;
 				previousX = currentX;

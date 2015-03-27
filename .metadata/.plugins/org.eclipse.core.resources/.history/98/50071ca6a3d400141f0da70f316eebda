@@ -13,7 +13,7 @@ public class CSPoller extends Thread {
 	/**
 	 * The maximum color value detected that can be taken as a grid line.
 	 */
-	private static final int MAX_GRID = 47;
+	private static final int MAX_GRID = 46;
 	
 	/**
 	 * The number of values to store to take the

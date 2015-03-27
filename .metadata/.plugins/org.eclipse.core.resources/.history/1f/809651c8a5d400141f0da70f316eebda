@@ -181,7 +181,7 @@ public class CSLocalizer implements CSListener {
 		}
 		double tmax = dc.getTheta();
 		double tavg = (tmin + tmax) / 2;
-		dc.setTheta(tmax + (Util.toRange(90 + CORRECTION_FACTOR - tavg, -180, true)));
+		dc.setTheta(tmax + (Util.toRange(90 - tavg, -180, true)));
 		//TODO
 		
 		try {
