@@ -37,39 +37,12 @@ public class AlphaMapped {
 		default:
 			throw new RuntimeException("Impossible button press.");
 		}
-		
-		//The points on the map. _tx means turn x after getting there.
-		//r is right and l is left.
-		final Point p0 = new Point(convert(0), convert(0));
-		final Point p1 = new Point(convert(-0.5), convert(2.5));
-		final Point p2_alpha = new Point(convert(-0.5), convert(3.1));
-		final Point p3 = new Point(convert(-0.5), convert(4.9));
-		final Point p4_tr = new Point(convert(-0.5), convert(5.1));
-		final Point p5_alpha = new Point(convert(0.1), convert(5.5));
-		final Point p6 = new Point(convert(0.9), convert(5.5));
-		final Point p7_tl = new Point(convert(1.1), convert(5.5));
-		final Point p8_tr = new Point(convert(1.5), convert(6.1));
-		final Point p9_alpha = new Point(convert(2.1), convert(6.5));
-		final Point p10 = new Point(convert(2.9), convert(6.5));
-		final Point p11 = new Point(convert(4.5), convert(6.5));
-		final Point p12_destination = new Point(convert(6), convert(6));
-		final Point p13 = new Point(convert(4.5), convert(6.5));
-		final Point p14_alpha = new Point(convert(2.9), convert(6.5));
-		final Point p15 = new Point(convert(2.1), convert(6.5));
-		final Point p16_tl = new Point(convert(1.9), convert(6.5));
-		final Point p17_tr = new Point(convert(1.5), convert(5.9));
-		final Point p18_alpha = new Point(convert(0.9), convert(5.5));
-		final Point p19 = new Point(convert(0.1), convert(5.5));
-		final Point p20_tl = new Point(convert(-0.1), convert(5.5));
-		final Point p21_alpha = new Point(convert(-0.5), convert(4.9));
-		final Point p22 = new Point(convert(-0.5), convert(3.1));
-		final Point p23 = new Point(convert(-0.5), convert(2.5));
-		final Point p24 = new Point(convert(0), convert(0));
+
 
 		//The position of the target.
 		final Point target = new Point(convert(9), convert(9));
 		//The number of shots to fire at each target.
-		final int shots = 3;
+		final int shots = 1;
 		
 		//Initializes the threads.
 		final DataCenter dc = new DataCenter();
@@ -93,6 +66,35 @@ public class AlphaMapped {
 
 		(new Thread() {
 			public void run() {
+				
+				//The points on the map. _tx means turn x after getting there.
+				//r is right and l is left.
+				 Point p0 = new Point(convert(0), convert(0));
+				 Point p1 = new Point(convert(-0.4), convert(2.5));
+				 Point p2_alpha = new Point(convert(-0.4), convert(3.2));
+				 Point p3 = new Point(convert(-0.4), convert(4.8));
+				 Point p4_tr = new Point(convert(-0.4), convert(5.2));
+				 Point p5_alpha = new Point(convert(0.2), convert(5.5));
+				 Point p6 = new Point(convert(0.8), convert(5.5));
+				 Point p7_tl = new Point(convert(1.2), convert(5.5));
+				 Point p8_tr = new Point(convert(1.4), convert(6.2));
+				 Point p9_alpha = new Point(convert(2.2), convert(6.4));
+				 Point p10 = new Point(convert(2.8), convert(6.4));
+				 Point p11 = new Point(convert(4.5), convert(6.25));
+				 Point p12_destination = new Point(convert(6), convert(6));
+				 Point p13 = new Point(convert(4.5), convert(6.5));
+				 Point p14_alpha = new Point(convert(2.8), convert(6.5));
+				 Point p15 = new Point(convert(2.2), convert(6.5));
+				 Point p16_tl = new Point(convert(1.8), convert(6.5));
+				 Point p17_tr = new Point(convert(1.5), convert(5.8));
+				 Point p18_alpha = new Point(convert(0.8), convert(5.5));
+				 Point p19 = new Point(convert(0.2), convert(5.5));
+				 Point p20_tl = new Point(convert(-0.2), convert(5.5));
+				 Point p21_alpha = new Point(convert(-0.5), convert(4.8));
+				 Point p22 = new Point(convert(-0.5), convert(3.2));
+				 Point p23 = new Point(convert(-0.5), convert(2.5));
+				 Point p24 = new Point(convert(0), convert(0));
+				
 				usl.doLocalization();
 				//Travels to 0 for the light localization.
 				nav.travelTo(p0, false);
@@ -107,12 +109,15 @@ public class AlphaMapped {
 				nav.travelTo(p2_alpha, false);
 				nav.travelInTunnelVertical(p3, true);
 				nav.travelTo(p4_tr, false);
+				nav.turnTo(90);
 				nav.turnRight();
 				nav.travelTo(p5_alpha, false);
 				nav.travelInTunnelHorizontal(p6, true);
 				nav.travelTo(p7_tl, false);
+				nav.turnTo(0);
 				nav.turnLeft();
 				nav.travelTo(p8_tr, false);
+				nav.turnTo(90);
 				nav.turnRight();
 				nav.travelTo(p9_alpha, false);
 				nav.travelInTunnelHorizontal(p10, true);
@@ -126,7 +131,7 @@ public class AlphaMapped {
 				turnToLaunch(p12_destination, target, nav);
 				//Fires shots times.
 				launcher.fire(shots);
-				
+				/*
 				//Turns to 45 degrees for the light localization.
 				nav.travelTo(p12_destination, false);
 				nav.turnTo(45);
@@ -156,7 +161,7 @@ public class AlphaMapped {
 				ll.doLocalization();
 				nav.travelTo(p24, false);
 				nav.turnTo(90.0);
-					
+				*/	
 				System.exit(0);
 			}
 		}).start();

@@ -1,0 +1,192 @@
+package main;
+import launcher.Launcher;
+import odometer.Odometer;
+import odometer.OdometerCorrection;
+import data.DataCenter;
+import drivers.CSPoller;
+import drivers.HWConstants;
+import drivers.Navigation;
+import drivers.USPoller;
+import util.Point;
+import util.Util;
+import lejos.nxt.Button;
+import lejos.nxt.Sound;
+import localization.CSLocalizer;
+import localization.USLocalizer;
+
+/**
+ * The main class. Initializes the threads of execution
+ * and starts them.
+ * 
+ * @author Andrei Purcarus
+ * @author Leotard Niyonkuru
+ */
+public class AlphaMapped {
+
+	/**
+	 * Main thread of execution of the robot. Starts all other threads.
+	 */
+	public static void main(String [] args) {
+		//Wait for a button to start.
+		int buttonChoice = Button.waitForAnyPress();
+		switch (buttonChoice) {
+		case Button.ID_ENTER: case Button.ID_LEFT: case Button.ID_RIGHT:
+			break;
+		case Button.ID_ESCAPE:
+			return;
+		default:
+			throw new RuntimeException("Impossible button press.");
+		}
+
+
+		//The position of the target.
+		final Point target = new Point(convert(9), convert(9));
+		//The number of shots to fire at each target.
+		final int shots = 3;
+		
+		//Initializes the threads.
+		final DataCenter dc = new DataCenter();
+		final Odometer odo = new Odometer(dc);
+		final OdometerCorrection oc = new OdometerCorrection(dc);
+		final Navigation nav = new Navigation(dc);
+		final USPoller usLeft = new USPoller(180, dc);
+		final USPoller usFront = new USPoller(90, dc);
+		final USPoller usRight = new USPoller(0, dc);
+		final CSPoller cs = new CSPoller(dc);
+		final USLocalizer usl = new USLocalizer(dc, nav);
+		final CSLocalizer ll = new CSLocalizer(dc, nav);
+		final Launcher launcher = new Launcher(HWConstants.LAUNCHER_MOTOR);
+
+		//Starts the threads.
+		odo.start();
+		usLeft.start();
+		usFront.start();
+		usRight.start();
+		cs.start();
+
+		(new Thread() {
+			public void run() {
+				
+				//The points on the map. _tx means turn x after getting there.
+				//r is right and l is left.
+				 Point p0 = new Point(convert(0), convert(0));
+				 Point p1 = new Point(convert(-0.5), convert(2.5));
+				 Point p2_alpha = new Point(convert(-0.5), convert(3.1));
+				 Point p3 = new Point(convert(-0.5), convert(4.9));
+				 Point p4_tr = new Point(convert(-0.5), convert(5.1));
+				 Point p5 = new Point(convert(0.1), convert(5.5));
+				 Point p6 = new Point(convert(0.9), convert(5.5));
+				 Point p7_tl = new Point(convert(1.1), convert(5.5));
+				 Point p8_tr = new Point(convert(1.5), convert(6.1));
+				 Point p9_alpha = new Point(convert(2.15), convert(6.5));
+				 Point p10 = new Point(convert(2.9), convert(6.5));
+				 Point p11 = new Point(convert(4.5), convert(6.5));
+				 Point p12_destination = new Point(convert(6), convert(6));
+				 Point p13 = new Point(convert(4.5), convert(6.5));
+				 Point p14_alpha = new Point(convert(2.9), convert(6.5));
+				 Point p15 = new Point(convert(2.1), convert(6.5));
+				 Point p16_tl = new Point(convert(1.9), convert(6.5));
+				 Point p17_tr = new Point(convert(1.5), convert(5.9));
+				 Point p18_alpha = new Point(convert(0.9), convert(5.5));
+				 Point p19 = new Point(convert(0.1), convert(5.5));
+				 Point p20_tl = new Point(convert(-0.1), convert(5.5));
+				 Point p21_alpha = new Point(convert(-0.5), convert(4.9));
+				 Point p22 = new Point(convert(-0.5), convert(3.1));
+				 Point p23 = new Point(convert(-0.5), convert(2.5));
+				 Point p24 = new Point(convert(0), convert(0));
+				
+				usl.doLocalization();
+				//Travels to 0 for the light localization.
+				nav.travelTo(p0, false);
+				//Turns to 45 degrees for the light localization.
+				nav.turnTo(45);
+				ll.doLocalization();
+				//Indicates that the localization is finished.
+				Sound.twoBeeps();
+				//Gets to destination.
+				oc.start();
+				nav.travelTo(p1, false);
+				nav.travelTo(p2_alpha, false);
+				nav.travelInTunnelVertical(p3, true);
+				nav.travelTo(p4_tr, false);
+				nav.turnRight();
+				nav.travelTo(p5, false);
+				nav.travelTo(p6, false);
+				nav.travelTo(p7_tl, false);
+				nav.turnLeft();
+				nav.travelTo(p8_tr, false);
+				nav.turnRight();
+				nav.travelTo(p9_alpha, false);
+				nav.travelInTunnelHorizontal(p10, true);
+				nav.travelTo(p11, false);
+				nav.travelTo(p12_destination, false);
+				oc.stop();
+				//Turns to 45 degrees for the light localization.
+				nav.turnTo(45);
+				ll.doLocalization(p12_destination);
+				
+				turnToLaunch(p12_destination, target, nav);
+				//Fires shots times.
+				launcher.fire(shots);
+				
+				//Turns to 45 degrees for the light localization.
+				nav.travelTo(p12_destination, false);
+				nav.turnTo(45);
+				ll.doLocalization(p12_destination);
+				
+				//Returns to origin.
+				oc.start();
+				nav.travelTo(p13, false);
+				nav.travelTo(p14_alpha, false);
+				nav.travelInTunnelHorizontal(p15, false);
+				nav.travelTo(p16_tl, false);
+				nav.turnLeft();
+				nav.travelTo(p17_tr, false);
+				nav.turnRight();
+				nav.travelTo(p18_alpha, false);
+				nav.travelInTunnelHorizontal(p19, false);
+				nav.travelTo(p20_tl, false);
+				nav.turnLeft();
+				nav.travelTo(p21_alpha, false);
+				nav.travelInTunnelVertical(p22, false);
+				nav.travelTo(p23, false);
+				nav.travelTo(p24, false);
+				oc.stop();
+				
+				//Turns to 45 degrees for the light localization.
+				nav.turnTo(45);
+				ll.doLocalization();
+				nav.travelTo(p24, false);
+				nav.turnTo(90.0);
+					
+				System.exit(0);
+			}
+		}).start();
+		
+		//Wait for another button press to exit.
+		Button.waitForAnyPress();
+		System.exit(0);
+	}
+	
+	/**
+	 * Converts a coordinate in the field to cm.
+	 */
+	private static double convert(double x) {
+		return x * HWConstants.TILE_DISTANCE;
+	}
+	
+	/**
+	 * Positions itself to fire at the target using the navigation.
+	 * The reference point serves to narrow down the possibilities of 
+	 * where to go, and the robot will position itelf on the line joining 
+	 * target and reference.
+	 */
+	private static void turnToLaunch(Point reference, Point target, Navigation nav) {
+		double angle = Math.atan2(target.y - reference.y, target.x - reference.x);
+		double xx = HWConstants.LAUNCH_DISTANCE * Math.cos(angle);
+		double yy = HWConstants.LAUNCH_DISTANCE * Math.sin(angle);
+		Point launch_pos = new Point(target.x - xx, target.y - yy);
+		nav.travelTo(launch_pos, false);
+		nav.turnTo(Util.toRange(Math.toDegrees(angle) - HWConstants.LAUNCH_ANGLE, 0.0, false));
+	}
+}

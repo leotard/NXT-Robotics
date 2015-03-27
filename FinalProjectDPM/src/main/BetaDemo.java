@@ -41,11 +41,11 @@ public class BetaDemo {
 		//The points on the map. _tx means turn x after getting there.
 		//r is right and l is left.
 		final Point p0 = new Point(convert(0), convert(0));
-		final Point p1 = new Point(convert(-0.5), convert(2.5));
-		final Point p2_tr = new Point(convert(-0.5), convert(5.1));
+		final Point p1 = new Point(convert(-0.4), convert(2.5));
+		final Point p2_tr = new Point(convert(-0.4), convert(5.1));
 		final Point p3_tl = new Point(convert(1.1), convert(5.5));
 		final Point p4_tr = new Point(convert(1.5), convert(6.1));
-		final Point p5 = new Point(convert(4.5), convert(6.5));
+		final Point p5 = new Point(convert(4.5), convert(6.4));
 		final Point p6_destination = new Point(convert(6), convert(6));
 
 		//The position of the target.

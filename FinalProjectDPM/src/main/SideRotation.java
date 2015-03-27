@@ -35,10 +35,12 @@ public class SideRotation {
 
 		switch (buttonChoice) {
 		case Button.ID_LEFT:
-			nav.turnLeft();
+			for (int i = 0; i < 4; ++i)
+				nav.turnLeft();
 			break;
 		case Button.ID_RIGHT:
-			nav.turnRight();
+			for (int i = 0; i < 4; ++i)
+				nav.turnRight();
 			break;
 		case Button.ID_ESCAPE:
 			System.exit(0);

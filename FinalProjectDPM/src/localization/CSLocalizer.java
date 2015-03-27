@@ -22,7 +22,7 @@ public class CSLocalizer implements CSListener {
 	/**
 	 * The angle in degrees by which to correct the final angle of the localization.
 	 */
-	private static final double CORRECTION_FACTOR = -1.6;
+	private static final double CORRECTION_FACTOR = 0;
 	
 	/**
 	 * The number of grid lines to detect during localization.
@@ -168,6 +168,22 @@ public class CSLocalizer implements CSListener {
 		double actualAngle = dist[2] + averageError + CORRECTION_FACTOR;
 		actualAngle = Util.toRange(actualAngle, 0.0, false);
 		dc.setXYT(x, y, actualAngle);
+		
+		//TODO
+		nav.travelTo(grid, false);
+		nav.turnTo(85);
+		while (dc.getCSValue() > 47) {
+			nav.turn(0.5);
+		}
+		double tmin = dc.getTheta();
+		while (dc.getCSValue() <= 46) {
+			nav.turn(0.5);
+		}
+		double tmax = dc.getTheta();
+		double tavg = (tmin + tmax) / 2;
+		dc.setTheta(tmax + (90 - tavg));
+		//TODO
+		
 		try {
 			Thread.sleep(TIMEOUT);
 		} catch (InterruptedException e) {

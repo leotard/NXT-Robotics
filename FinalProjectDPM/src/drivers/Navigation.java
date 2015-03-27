@@ -20,16 +20,16 @@ public class Navigation {
 	/**
 	 * The intermediate speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int MID_SPD = 200;
+	private static final int MID_SPD = 300;
 	/**
 	 * The highest speed used by the robot's motors for navigation in deg/s.
 	 */
-	private static final int HIGH_SPD = 300;
+	private static final int HIGH_SPD = 500;
 	/**
 	 * The default speed used by the right motor while rotating in place.
 	 * The left motor speed is scaled accordingly.
 	 */
-	private static final int TURN_SPD = 120;
+	private static final int TURN_SPD = 200;
 	/**
 	 * The acceleration used by the robot's motors in deg/s/s.
 	 */
@@ -88,6 +88,11 @@ public class Navigation {
 		lock();
 		for (Point p : path) {
 			travelToPoint(p, obstacles);
+		}
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 		unlock();
 	}
@@ -508,7 +513,7 @@ public class Navigation {
 	/**
 	 * Time in ms to wait between consecutive checks of the position during tunneling.
 	 */
-	private static final long TUNNEL_DELAY = 100;
+	private static final long TUNNEL_DELAY = 3000;
 	
 	/**
 	 * Experimental class to use when traveling in a vertical tunnel
@@ -569,14 +574,19 @@ public class Navigation {
 			//Sets the angle in the range [0, 360).
 			minAng = Util.toRange(minAng, 0.0, false);
 			if (Math.abs(xyt[2] - minAng) > DEG_ERR && 
-					Math.abs(xyt[2] - minAng) < 360 - DEG_ERR)
+					Math.abs(xyt[2] - minAng) < 360 - DEG_ERR) {
 				this.turnToAngle(minAng);
+				continue;
+			}
 			
 			long end = System.currentTimeMillis();
 			if (end - start > TUNNEL_DELAY) {
 				start = end;
 				double left = dc.getFilteredDistance(180) + HWConstants.LEFT_US_DISTANCE;
 				double right = dc.getFilteredDistance(0) + HWConstants.RIGHT_US_DISTANCE;
+				if (left > HWConstants.TILE_DISTANCE || right > HWConstants.TILE_DISTANCE) { 
+					continue;
+				}
 				double avgXDisplacement = 0;
 				double avgX = 0;
 				currentY = dc.getY();
@@ -587,8 +597,9 @@ public class Navigation {
 					avgXDisplacement = ((right - previousRight) + (previousLeft - left)) / 2;
 					avgX = destination.x + (right - left) / 2;
 				}
-				double correctAngle = Math.toDegrees(Math.atan2(currentY - previousY, avgXDisplacement));
-				dc.setXYT(avgX, currentY, correctAngle);
+				//double correctAngle = Math.toDegrees(Math.atan2(currentY - previousY, avgXDisplacement));
+				//dc.setXYT(avgX, currentY, correctAngle);
+				dc.setX(avgX);
 				previousLeft = left;
 				previousRight = right;
 				previousY = currentY;
@@ -658,14 +669,19 @@ public class Navigation {
 			//Sets the angle in the range [0, 360).
 			minAng = Util.toRange(minAng, 0.0, false);
 			if (Math.abs(xyt[2] - minAng) > DEG_ERR && 
-					Math.abs(xyt[2] - minAng) < 360 - DEG_ERR)
+					Math.abs(xyt[2] - minAng) < 360 - DEG_ERR) {
 				this.turnToAngle(minAng);
+				continue;
+			}
 			
 			long end = System.currentTimeMillis();
 			if (end - start > TUNNEL_DELAY) {
 				start = end;
 				double left = dc.getFilteredDistance(180) + HWConstants.LEFT_US_DISTANCE;
 				double right = dc.getFilteredDistance(0) + HWConstants.RIGHT_US_DISTANCE;
+				if (left > HWConstants.TILE_DISTANCE || right > HWConstants.TILE_DISTANCE) { 
+					continue;
+				}
 				double avgYDisplacement = 0;
 				double avgY = 0;
 				currentX = dc.getX();
@@ -676,8 +692,9 @@ public class Navigation {
 					avgYDisplacement = ((previousRight - right) + (left - previousLeft)) / 2;
 					avgY = destination.y + (left - right) / 2;
 				}
-				double correctAngle = Math.toDegrees(Math.atan2(avgYDisplacement, currentX - previousX));
-				dc.setXYT(currentX, avgY, correctAngle);
+				//double correctAngle = Math.toDegrees(Math.atan2(avgYDisplacement, currentX - previousX));
+				//dc.setXYT(currentX, avgY, correctAngle);
+				dc.setY(avgY);
 				previousLeft = left;
 				previousRight = right;
 				previousX = currentX;
