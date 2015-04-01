@@ -70,10 +70,10 @@ public class AlphaMapped {
 				//The points on the map. _tx means turn x after getting there.
 				//r is right and l is left.
 				 Point p0 = new Point(convert(0), convert(0));
-				 Point p1 = new Point(convert(-0.4), convert(2.5));
-				 Point p2_alpha = new Point(convert(-0.4), convert(3.2));
-				 Point p3 = new Point(convert(-0.4), convert(4.8));
-				 Point p4_tr = new Point(convert(-0.4), convert(5.2));
+				 Point p1 = new Point(convert(-0.45), convert(2.5));
+				 Point p2_alpha = new Point(convert(-0.45), convert(3.2));
+				 Point p3 = new Point(convert(-0.45), convert(4.8));
+				 Point p4_tr = new Point(convert(-0.45), convert(5.2));
 				 Point p5_alpha = new Point(convert(0.2), convert(5.5));
 				 Point p6 = new Point(convert(0.8), convert(5.5));
 				 Point p7_tl = new Point(convert(1.2), convert(5.5));

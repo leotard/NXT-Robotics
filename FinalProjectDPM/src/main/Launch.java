@@ -28,18 +28,26 @@ public class Launch {
 		}
 
 		final Launcher launcher = new Launcher(HWConstants.LAUNCHER_MOTOR);
-
-		while (true) {
-			buttonChoice = Button.waitForAnyPress();
-			switch (buttonChoice) {
-			case Button.ID_ENTER: case Button.ID_LEFT: case Button.ID_RIGHT:
-				break;
-			case Button.ID_ESCAPE:
-				System.exit(0);
-			default:
-				throw new RuntimeException("Impossible button press.");
+		
+		(new Thread() {
+			public void run() {
+				while (true) {
+					int buttonChoice = Button.waitForAnyPress();
+					switch (buttonChoice) {
+					case Button.ID_ENTER: case Button.ID_LEFT: case Button.ID_RIGHT:
+						break;
+					case Button.ID_ESCAPE:
+						System.exit(0);
+					default:
+						throw new RuntimeException("Impossible button press.");
+					}
+					launcher.fire();
+				}
 			}
-			launcher.fire();
-		}
+		}).start();
+		
+		//Wait for another button press to exit.
+		Button.waitForAnyPress();
+		System.exit(0);
 	}
 }

@@ -75,7 +75,7 @@ public class Launcher {
 	 */
 	private void activate() {
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(-540);
+		LAUNCHER.rotate(-340);
 	}
 	
 	/**
@@ -84,7 +84,7 @@ public class Launcher {
 	 */
 	private void activateFromLaunch() {
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(-450);
+		LAUNCHER.rotate(-250);
 	}
 	
 	/**
@@ -92,7 +92,7 @@ public class Launcher {
 	 */
 	private void arm() {
 		LAUNCHER.setSpeed(HIGH);
-		LAUNCHER.rotate(260);
+		LAUNCHER.rotate(60);
 		LAUNCHER.setSpeed(LOW);
 		LAUNCHER.rotate(100);
 	}
